@@ -3,7 +3,7 @@
 Diferente das outras fontes, aqui o regime não importa. Cada vaga sai com scope="local" e o regime
 no campo `location` (ex.: "Maringá · presencial"), para a página e o resumo não misturarem com as remotas.
 
-Usa Gupy (filtro de cidade da API), Vagas.com.br e InfoJobs (busca por cidade) e a busca pública do LinkedIn.
+Usa Gupy (filtro de cidade da API), Vagas.com.br, InfoJobs e Empregare (busca por cidade) e a busca pública do LinkedIn.
 O LinkedIn roda por último: se bloquear, as outras já foram coletadas.
 """
 from __future__ import annotations
@@ -14,7 +14,7 @@ from urllib.parse import quote
 
 from .. import http
 from ..models import Job
-from . import gupy, infojobs, linkedin, vagascombr
+from . import empregare, gupy, infojobs, linkedin, vagascombr
 
 REGIME = {"remote": "remoto", "hybrid": "híbrido", "on-site": "presencial"}
 
@@ -23,7 +23,7 @@ def fetch(cfg: dict) -> list[Job]:
     loc = cfg.get("local", {})
     if not loc.get("enabled", False):
         return []
-    jobs = _gupy(loc) + _vagascombr(loc) + _infojobs(loc) + _linkedin(loc)
+    jobs = _gupy(loc) + _vagascombr(loc) + _infojobs(loc) + _empregare(loc) + _linkedin(loc)
     cities = {_norm(c) for c in loc.get("cities", [loc.get("city", "")])}
     return [j for j in jobs if any(c in _norm(j.location) for c in cities)]
 
@@ -67,6 +67,13 @@ def _vagascombr(loc: dict) -> list[Job]:
         for job in vagascombr.parse(http.decode(r)):
             job.scope = "local"
             jobs.append(job)
+    return jobs
+
+
+def _empregare(loc: dict) -> list[Job]:
+    jobs = empregare.fetch_city(loc["city"], loc.get("uf", ""), _terms(loc))
+    for job in jobs:
+        job.scope = "local"
     return jobs
 
 

@@ -1,4 +1,4 @@
-from . import (companies, geekhunter, github, gupy, himalayas, infojobs, jobicy, linkedin, local, programathor,
+from . import (companies, empregare, geekhunter, github, gupy, himalayas, infojobs, jobicy, linkedin, local, programathor,
                remoteok, remotive, vagascombr, weworkremotely)
 
 # nome -> função fetch(cfg) -> list[Job]
@@ -7,6 +7,7 @@ SOURCES = {
     "gupy": gupy.fetch,
     "local": local.fetch,
     "infojobs": infojobs.fetch,
+    "empregare": empregare.fetch,
     "companies": companies.fetch,
     "jobicy": jobicy.fetch,
     "himalayas": himalayas.fetch,

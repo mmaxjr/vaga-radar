@@ -236,3 +236,26 @@ def test_jobicy_e_himalayas(monkeypatch):
     jobs = himalayas.fetch({"himalayas": {"queries": ["sre"]}})
     assert [j.title for j in jobs] == ["SRE", "SRE global"]  # a que exclui o Brasil fica de fora
     assert jobs[0].tags == ["Senior"] and jobs[1].location == "Global"
+
+
+def test_parse_empregare():
+    from datetime import datetime, timedelta, timezone
+
+    from vagas.sources import empregare
+
+    def card(slug, title, regime, date="ter., 29/setembro"):
+        return f"""<a href="/pt-br/vaga-{slug}"><article class="card card-vaga">
+          <p class="card-vaga-empresa">ACME</p><small class="texto-data-card">{date}</small>
+          <p class="titulo-vaga">{title}</p><p class="card-cidades"><span></span> Maringá, PR, BR</p>
+          <ul><li><small>{regime}</small></li></ul>R$ 8.000,00</article></a>"""
+
+    today = datetime(2026, 9, 29, 15, 0, tzinfo=timezone(timedelta(hours=-3)))
+    html = (card("a_1", "Analista de Redes", "Totalmente Remoto") + card("b_2", "Analista de TI", "Presencial", "dom., 30/dezembro")
+            + '<a href="/pt-br/x"><p>sem cartão</p></a>')
+    remoto, presencial = empregare.parse(html, today)
+    assert (remoto.company, remoto.location, remoto.salary) == ("ACME", "Maringá, PR · totalmente remoto", "R$ 8.000,00")
+    assert remoto.posted.startswith("2026-09-29") and remoto.url == "https://www.empregare.com/pt-br/vaga-a_1"
+    assert presencial.location == "Maringá, PR · presencial"
+    so_remoto = empregare.parse(card("c_3", "Dev", "Totalmente Remoto").replace("Maringá, PR, BR", "Totalmente Remoto"), today)
+    assert so_remoto[0].location == "Totalmente Remoto"  # não repete o regime
+    assert presencial.posted.startswith("2025-12-30")  # 30/dezembro no futuro = ano passado

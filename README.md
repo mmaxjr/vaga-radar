@@ -23,6 +23,7 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 | InfoJobs | Brasil | HTML da busca "home office"; o cartão informa o regime, então só entra o que diz "Home Office" |
 | Quadros de vagas de empresas (Canonical, Datadog, Elastic, GitLab e outras) | Global | APIs públicas Greenhouse/Lever, lista de empresas em `[companies]`; só vagas que se declaram remotas |
 | [Jobicy](https://jobicy.com) e [Himalayas](https://himalayas.app) | Internacional | API pública; só vagas abertas ao Brasil, LATAM ou "anywhere" |
+| Empregare | Brasil | HTML das listagens (remoto, por termo e por cidade); o cartão informa o regime, então só entra o que diz "Totalmente Remoto" |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |
@@ -79,7 +80,7 @@ cities = ["Maringá", "Sarandi", "Paiçandu", "Marialva"]   # cidades aceitas no
 terms = ["ti", "infraestrutura", "redes", "segurança da informação"]
 ```
 
-As fontes usadas são Gupy (filtro de cidade), Vagas.com.br, InfoJobs e LinkedIn. Essas vagas saem marcadas como
+As fontes usadas são Gupy (filtro de cidade), Vagas.com.br, InfoJobs, Empregare e LinkedIn. Essas vagas saem marcadas como
 "na sua cidade", em um grupo separado no resumo e com filtro próprio na página, sem misturar com as remotas.
 O Gupy informa o regime (presencial/híbrido/remoto); o LinkedIn e o Vagas.com.br nem sempre, então confira no anúncio.
 
