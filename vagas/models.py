@@ -20,6 +20,7 @@ class Job:
     tags: list[str] = field(default_factory=list)
     salary: str = ""
     international: bool = False
+    scope: str = "remoto"  # "remoto" (100% remota) ou "local" (vaga na sua cidade, qualquer regime)
     first_seen: str = field(default_factory=now_iso)
 
     @property

@@ -62,6 +62,26 @@ Só entram vagas **remotas**: cada fonte já é consultada com o filtro de remot
 Dica de regex: para casar só a palavra inteira use `(?<![a-z])go(?![a-z])` (evita casar "Goiás"). Se preferir
 `\b`, use aspas simples no TOML (`'\bgo\b'`), que não interpretam a barra invertida.
 
+## Vagas na sua cidade
+
+Além das remotas, dá para incluir vagas da **sua cidade em qualquer regime** (presencial, híbrido ou remoto).
+Ligue a seção `[local]` do [config.toml](config.toml):
+
+```toml
+[local]
+enabled = true
+city = "Maringá"
+state = "Paraná"
+cities = ["Maringá", "Sarandi", "Paiçandu", "Marialva"]   # cidades aceitas no resultado
+terms = ["ti", "infraestrutura", "redes", "segurança da informação"]
+```
+
+As fontes usadas são Gupy (filtro de cidade), Vagas.com.br e LinkedIn. Essas vagas saem marcadas como
+"na sua cidade", em um grupo separado no resumo e com filtro próprio na página, sem misturar com as remotas.
+O Gupy informa o regime (presencial/híbrido/remoto); o LinkedIn e o Vagas.com.br nem sempre, então confira no anúncio.
+
+Sites atrás de verificação anti-robô (ex.: Cloudflare "Just a moment...") não são coletados de propósito.
+
 ## Resumo no Telegram
 
 1. Crie um bot com o [@BotFather](https://t.me/BotFather) e copie o token.

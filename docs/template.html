@@ -23,6 +23,7 @@
   .meta { color:var(--muted); font-size:13px; margin-top:3px; }
   .tag { display:inline-block; border:1px solid var(--line); border-radius:99px; padding:0 8px; font-size:12px; margin-right:4px; }
   .new { color:#1a7f37; font-weight:600; }
+  .tag.here { border-color:var(--accent); color:var(--accent); }
   .empty { color:var(--muted); text-align:center; padding:40px 0; }
   footer { color:var(--muted); font-size:12px; margin:24px 0; }
 </style>
@@ -35,9 +36,11 @@
     <input id="q" type="search" placeholder="Filtrar: devops, python, segurança, pleno..." autofocus>
     <select id="src"><option value="">Todas as fontes</option></select>
     <select id="where">
-      <option value="">Brasil + internacional</option>
-      <option value="br">Só Brasil</option>
-      <option value="intl">Só internacional</option>
+      <option value="">Tudo</option>
+      <option value="remoto">Só remoto</option>
+      <option value="local">Só na minha cidade</option>
+      <option value="br">Remoto Brasil</option>
+      <option value="intl">Remoto internacional</option>
     </select>
   </div>
   <div id="list"></div>
@@ -66,11 +69,19 @@ function ago(iso) {
   return d === 1 ? "ontem" : `há ${d} dias`;
 }
 
+// vagas antigas no JSON não têm "scope": eram todas remotas
+const scopeOf = j => j.scope || "remoto";
+function matchesWhere(j, where) {
+  if (where === "local") return scopeOf(j) === "local";
+  if (scopeOf(j) === "local") return false;
+  return where === "remoto" || (where === "intl") === !!j.international;
+}
+
 function render() {
   const q = $("q").value.trim().toLowerCase(), src = $("src").value, where = $("where").value;
   const rows = jobs.filter(j =>
     (!src || j.source === src) &&
-    (!where || (where === "intl") === !!j.international) &&
+    (!where || matchesWhere(j, where)) &&
     (!q || [j.title, j.company, j.location, j.source, ...(j.tags || [])].join(" ").toLowerCase().includes(q)));
   $("sub").textContent = `${rows.length} de ${jobs.length} vagas · atualizado em ${new Date(DATA.updated).toLocaleString("pt-BR")}`;
   $("list").innerHTML = rows.length ? rows.slice(0, 300).map(j => {
@@ -79,7 +90,7 @@ function render() {
     return `<div class="job">
       <a href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">${esc(j.title)}</a>
       <div class="meta">${[esc(j.company), esc(j.location), fresh ? `<span class="new">${when}</span>` : when, j.salary && esc(j.salary)].filter(Boolean).join(" · ")}
-        <span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        ${scopeOf(j) === "local" ? '<span class="tag here">na sua cidade</span>' : ""}<span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") : `<div class="empty">Nenhuma vaga com esse filtro.</div>`;
 }

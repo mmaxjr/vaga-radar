@@ -18,6 +18,7 @@ include = [
   '(?<![a-z])dev(?![a-z])', 'python', 'javascript', 'typescript', 'node', 'react', 'angular', 'vue',
   '(?<![a-z])java(?![a-z])', '(?<![a-z])go(?![a-z])', 'golang', 'php', 'ruby', '[.]net', 'c#', 'mobile', 'android', 'flutter',
   'engenheiro de dados', 'data engineer', 'machine learning', 'automação',
+  '(?<![a-z])ti(?![a-z])', 'inform[aá]tica',
   # infra / devops / cloud
   'infra', 'devops', 'devsecops', '(?<![a-z])sre(?![a-z])', 'sysadmin', 'sistemas', 'linux', 'kubernetes', 'docker',
   'cloud', '(?<![a-z])aws(?![a-z])', 'azure', 'gcp', 'terraform', 'observabilidade', 'plataforma', 'platform',
@@ -64,6 +65,17 @@ pages_per_term = 2
 days = 7
 # Pausa entre requisições (segundos) para não tomar bloqueio
 delay = 2.5
+
+[local]
+# Vagas na SUA cidade, em qualquer regime (presencial, híbrido ou remoto). Saem separadas das remotas.
+# Desligado por padrão: ligue e troque a cidade. Fontes usadas: Gupy, Vagas.com.br e LinkedIn.
+enabled = false
+city = "Maringá"
+state = "Paraná"
+# Cidades aceitas no resultado (a busca do LinkedIn traz vizinhas junto)
+cities = ["Maringá", "Sarandi", "Paiçandu", "Marialva"]
+terms = ["ti", "infraestrutura", "redes", "segurança da informação", "suporte", "desenvolvedor"]
+days = 14
 
 [geekhunter]
 pages_per_term = 2

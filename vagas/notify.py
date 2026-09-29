@@ -22,10 +22,11 @@ def format_digest(jobs: list[Job], max_items: int = 60) -> list[str]:
     jobs = sorted(jobs, key=lambda j: j.posted or j.first_seen, reverse=True)[:max_items]
     groups: dict[str, list[Job]] = defaultdict(list)
     for j in jobs:
-        groups["Internacional" if j.international else "Brasil"].append(j)
+        groups["Na sua cidade" if j.scope == "local" else "Remoto internacional" if j.international
+               else "Remoto Brasil"].append(j)
 
-    lines = [f"<b>{total} vagas remotas novas</b>"]
-    for name in ("Brasil", "Internacional"):
+    lines = [f"<b>{total} vagas novas</b>"]
+    for name in ("Na sua cidade", "Remoto Brasil", "Remoto internacional"):
         if name not in groups:
             continue
         lines.append(f"\n<b>{name}</b>")
@@ -48,6 +49,8 @@ def format_digest(jobs: list[Job], max_items: int = 60) -> list[str]:
 def _line(j: Job) -> str:
     who = f" - {html.escape(j.company)}" if j.company else ""
     extra = f" ({html.escape(j.salary)})" if j.salary else ""
+    if j.scope == "local" and j.location:  # regime importa: presencial, híbrido ou remoto
+        extra += f" ({html.escape(j.location)})"
     return (f'• <a href="{html.escape(j.url, quote=True)}">{html.escape(j.title)}</a>{who}{extra} '
             f"<i>[{html.escape(j.source)}]</i>")
 

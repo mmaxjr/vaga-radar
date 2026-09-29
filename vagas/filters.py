@@ -28,10 +28,12 @@ class JobFilter:
             return False
         if self.exclude and self.exclude.search(job.title):
             return False
-        if job.source in self.strict_sources and not REMOTE_WORDS.search(f"{job.title} {job.location}"):
-            return False
-        if job.international and not self.region_ok(job.location):
-            return False
+        # Vagas "local" (sua cidade) valem em qualquer regime; as demais precisam ser 100% remotas
+        if job.scope == "remoto":
+            if job.source in self.strict_sources and not REMOTE_WORDS.search(f"{job.title} {job.location}"):
+                return False
+            if job.international and not self.region_ok(job.location):
+                return False
         return not self.too_old(job)
 
     def region_ok(self, location: str) -> bool:

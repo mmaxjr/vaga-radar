@@ -138,3 +138,36 @@ def test_parse_geekhunter():
     j = jobs[0]
     assert (j.company, j.location, j.tags) == ("Ntt Data", "Remoto", ["Pleno"])
     assert j.posted.startswith("2026-09-26T12:00")
+
+
+def test_vaga_local_vale_em_qualquer_regime():
+    presencial = Job(source="gupy", scope="local", title="Analista de Infraestrutura", url="https://g.com/9",
+                     location="Maringá · presencial")
+    remota_presencial = Job(source="gupy", scope="remoto", title="Analista de Infraestrutura", url="https://g.com/8",
+                            location="", international=True)
+    assert FLT.accepts(presencial)
+    # vaga internacional sem região compatível continua barrada quando o escopo é remoto
+    remota_presencial.location = "USA Only"
+    assert not FLT.accepts(remota_presencial)
+    linkedin_presencial = Job(source="linkedin", scope="local", title="Analista de Redes", url="https://l.com/5",
+                              location="Maringá, PR")
+    assert FLT.accepts(linkedin_presencial)  # sem "remoto" no título, mas é da sua cidade
+
+
+def test_fonte_local_filtra_cidade_e_marca_regime(monkeypatch):
+    from vagas.sources import local
+
+    class R:
+        def __init__(self, data): self._d = data
+        def json(self): return self._d
+
+    gupy_data = {"data": [
+        {"name": "Analista de Redes", "jobUrl": "https://g.com/1", "careerPageName": "ACME", "city": "Maringá",
+         "workplaceType": "hybrid", "publishedDate": "2026-09-28"},
+        {"name": "Analista de Redes", "jobUrl": "https://g.com/2", "careerPageName": "BETA", "city": "Londrina",
+         "workplaceType": "on-site", "publishedDate": "2026-09-28"}], "pagination": {"total": 2}}
+    monkeypatch.setattr(local.http, "get", lambda url, **kw: R(gupy_data) if "gupy" in url else None)
+    cfg = {"local": {"enabled": True, "city": "Maringá", "state": "Paraná", "cities": ["Maringá"], "terms": ["redes"]}}
+    jobs = local.fetch(cfg)
+    assert [(j.company, j.location, j.scope) for j in jobs] == [("ACME", "Maringá · híbrido", "local")]
+    assert local.fetch({"local": {"enabled": False}}) == []
