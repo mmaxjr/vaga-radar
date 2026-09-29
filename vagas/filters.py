@@ -7,12 +7,17 @@ from datetime import datetime, timedelta, timezone
 from .models import Job
 
 
+REMOTE_WORDS = re.compile(r"remot|home ?office|anywhere|worldwide|work from home", re.I)
+
+
 class JobFilter:
     def __init__(self, cfg: dict):
         s = cfg["search"]
         self.include = re.compile("|".join(s["include"]), re.I)
         self.exclude = re.compile("|".join(s["exclude"]), re.I) if s.get("exclude") else None
         self.max_age = timedelta(days=s.get("max_age_days", 30))
+        # Fontes que não garantem o regime: a vaga só entra se o título/local disser que é remota
+        self.strict_sources = set(s.get("strict_remote_sources", []))
         regions = s.get("international_ok_regions", [])
         self.regions = re.compile("|".join(map(re.escape, regions)), re.I) if regions else None
 
@@ -22,6 +27,8 @@ class JobFilter:
         if not self.include.search(job.title):
             return False
         if self.exclude and self.exclude.search(job.title):
+            return False
+        if job.source in self.strict_sources and not REMOTE_WORDS.search(f"{job.title} {job.location}"):
             return False
         if job.international and not self.region_ok(job.location):
             return False

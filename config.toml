@@ -36,6 +36,10 @@ exclude = [
   'seguran[cç]a do trabalho', 'seguran[cç]a patrimonial', 'vigilante', 'porteiro',
 ]
 
+# Fontes que não confirmam o regime da vaga (o filtro "remoto" do LinkedIn falha bastante):
+# nelas só entra vaga cujo título ou local diga "remoto"/"home office". Vazio = confia na fonte.
+strict_remote_sources = ["linkedin"]
+
 # Ignora vagas publicadas há mais dias que isso
 max_age_days = 30
 
