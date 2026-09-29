@@ -20,6 +20,9 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 | LinkedIn | Brasil | busca pública de visitante, filtro "remoto" |
 | Gupy | Brasil | API pública do portal de vagas |
 | GeekHunter | Brasil | listagem pública `/pt/vagas` pela busca oficial do site, só `workModality=remote` (fora "remoto em cidade"); nunca abre `/jobs/...`, que o robots.txt proíbe |
+| InfoJobs | Brasil | HTML da busca "home office"; o cartão informa o regime, então só entra o que diz "Home Office" |
+| Quadros de vagas de empresas (Canonical, Datadog, Elastic, GitLab e outras) | Global | APIs públicas Greenhouse/Lever, lista de empresas em `[companies]`; só vagas que se declaram remotas |
+| [Jobicy](https://jobicy.com) e [Himalayas](https://himalayas.app) | Internacional | API pública; só vagas abertas ao Brasil, LATAM ou "anywhere" |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |
@@ -76,7 +79,7 @@ cities = ["Maringá", "Sarandi", "Paiçandu", "Marialva"]   # cidades aceitas no
 terms = ["ti", "infraestrutura", "redes", "segurança da informação"]
 ```
 
-As fontes usadas são Gupy (filtro de cidade), Vagas.com.br e LinkedIn. Essas vagas saem marcadas como
+As fontes usadas são Gupy (filtro de cidade), Vagas.com.br, InfoJobs e LinkedIn. Essas vagas saem marcadas como
 "na sua cidade", em um grupo separado no resumo e com filtro próprio na página, sem misturar com as remotas.
 O Gupy informa o regime (presencial/híbrido/remoto); o LinkedIn e o Vagas.com.br nem sempre, então confira no anúncio.
 
@@ -151,7 +154,8 @@ tests/
 - **LinkedIn**: usa o endpoint público de busca, sem login. Ele limita acessos: a coleta tem pausas e desiste sozinha
   se for bloqueada. Use com moderação (1 a 2 vezes por dia). O local exibido é o da empresa e o filtro de remoto
   às vezes falha, então confira a vaga.
-- **Remote OK e Remotive** pedem link de volta à fonte e limitam consultas; a página já linka para elas.
+- **Remote OK, Remotive, Jobicy e Himalayas** pedem crédito à fonte e limitam consultas; a página já linka para elas.
+- **Quadros de empresas**: as APIs não informam a data de publicação de forma confiável, então essas vagas entram sem data; "nova" significa que apareceu pela primeira vez no quadro.
 - **GitHub**: sem token são 60 requisições/h. Defina `GITHUB_TOKEN` para mais.
 - Sites mudam o HTML sem avisar. Se uma fonte parar de funcionar, o `parse()` dela é o primeiro lugar a olhar,
   e uma fonte que falha não derruba as outras.

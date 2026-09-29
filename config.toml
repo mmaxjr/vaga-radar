@@ -72,10 +72,24 @@ delay = 2.5
 enabled = false
 city = "Maringá"
 state = "Paraná"
+uf = "PR"   # sigla do estado (usada pelo InfoJobs)
 # Cidades aceitas no resultado (a busca do LinkedIn traz vizinhas junto)
 cities = ["Maringá", "Sarandi", "Paiçandu", "Marialva"]
 terms = ["ti", "infraestrutura", "redes", "segurança da informação", "suporte", "desenvolvedor"]
 days = 14
+
+[companies]
+# Vagas direto das empresas (APIs públicas de quadro de vagas). Só entram vagas que se declarem remotas.
+# O "slug" é a parte final do endereço: boards.greenhouse.io/<slug>  ou  jobs.lever.co/<slug>
+greenhouse = ["canonical", "datadog", "elastic", "gitlab", "twilio", "remotecom", "coinbase", "stone", "clara", "vtex", "quintoandar"]
+lever = []
+
+[jobicy]
+geos = ["brazil", "anywhere"]
+tags = ["devops", "sre", "infrastructure", "security", "network", "linux"]
+
+[himalayas]
+queries = ["devops", "sre", "infrastructure", "security", "network engineer", "linux"]
 
 [geekhunter]
 pages_per_term = 2

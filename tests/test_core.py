@@ -171,3 +171,68 @@ def test_fonte_local_filtra_cidade_e_marca_regime(monkeypatch):
     jobs = local.fetch(cfg)
     assert [(j.company, j.location, j.scope) for j in jobs] == [("ACME", "Maringá · híbrido", "local")]
     assert local.fetch({"local": {"enabled": False}}) == []
+
+
+class _Resp:
+    def __init__(self, data): self._d = data
+    def json(self): return self._d
+
+
+def test_companies_greenhouse_e_lever_so_aceitam_remoto(monkeypatch):
+    from vagas.sources import companies
+
+    gh = {"jobs": [
+        {"title": "Linux Support Engineer", "absolute_url": "https://g.io/c/1", "company_name": "Canonical",
+         "location": {"name": "Home based - Worldwide"}, "first_published": "2026-09-01T10:00:00-04:00"},
+        {"title": "Analista de Infraestrutura", "absolute_url": "https://g.io/c/2", "company_name": "Canonical",
+         "location": {"name": "São Paulo, Brazil"}, "first_published": "2026-09-01T10:00:00-04:00"}]}
+    lever = [{"text": "SRE", "hostedUrl": "https://l.co/x/1", "workplaceType": "remote", "createdAt": 1790000000000,
+              "categories": {"location": "Brazil", "team": "Infra"}},
+             {"text": "SRE Presencial", "hostedUrl": "https://l.co/x/2", "workplaceType": "onsite", "categories": {}}]
+    monkeypatch.setattr(companies.http, "get", lambda url, **kw: _Resp(gh if "greenhouse" in url else lever))
+    jobs = companies.fetch({"companies": {"greenhouse": ["canonical"], "lever": ["acme"]}})
+    assert [(j.title, j.international) for j in jobs] == [("Linux Support Engineer", True), ("SRE", False)]
+    assert jobs[0].company == "Canonical" and jobs[1].tags == ["Infra"]
+    # a região é decidida pelo filtro geral: worldwide passa, "Home based - EMEA" não
+    assert FLT.accepts(jobs[0])
+    assert not FLT.accepts(Job(source="x", title="Linux Engineer", url="https://x/9",
+                               location="Home based - EMEA", international=True))
+
+
+def test_parse_infojobs():
+    from vagas.sources import infojobs
+
+    card = """<div class="js_rowCard" data-href="/vaga-de-analista-x__1.aspx"><div class="js_date" data-value="2026/09/29 02:57:00"></div>
+      <h2> Analista de Segurança da Informação </h2><a href="/empresa-acme__-1.aspx"><span>ACME</span></a>
+      <div class="mb-8">Curitiba - PR<span hidden>, 5 Km</span></div>R$ 5.000,00 Home Office Ensino Superior</div>"""
+    presencial = card.replace("__1", "__2").replace("Home Office", "Presencial")
+    jobs = infojobs.parse(card + card + presencial + '<div class="js_rowCard"><h2>anúncio</h2></div>')
+    assert len(jobs) == 2  # duplicado e anúncio sem link descartados
+    j = jobs[0]
+    assert (j.company, j.location, j.salary) == ("ACME", "Curitiba - PR · home office", "R$ 5.000,00")
+    assert j.posted.startswith("2026-09-29T02:57") and j.url.endswith("/vaga-de-analista-x__1.aspx")
+    assert jobs[1].location.endswith("presencial")
+
+
+def test_jobicy_e_himalayas(monkeypatch):
+    from vagas.sources import himalayas, jobicy
+
+    monkeypatch.setattr(jobicy.time, "sleep", lambda s: None)
+    monkeypatch.setattr(himalayas.time, "sleep", lambda s: None)
+    jb = {"jobs": [{"url": "https://jobicy.com/jobs/1", "jobTitle": "DevOps Engineer", "companyName": "Acme",
+                    "jobGeo": "LATAM", "pubDate": "2026-09-21 09:35:21", "salaryMin": "1000", "salaryMax": "2000",
+                    "salaryCurrency": "USD", "salaryPeriod": "monthly"}]}
+    monkeypatch.setattr(jobicy.http, "get", lambda url, **kw: _Resp(jb))
+    (j,) = jobicy.fetch({"jobicy": {"geos": ["brazil"], "tags": ["devops", "sre"]}})  # mesma vaga em 2 buscas
+    assert (j.location, j.posted, j.international) == ("LATAM", "2026-09-21T09:35:21", True)
+    assert j.salary == "USD 1,000-2,000/mon"
+
+    hm = {"jobs": [
+        {"title": "SRE", "companyName": "A", "guid": "https://h.app/1", "locationRestrictions": ["Brazil", "Chile"],
+         "pubDate": 1790000000, "seniority": ["Senior"]},
+        {"title": "SRE US", "companyName": "B", "guid": "https://h.app/2", "locationRestrictions": ["United States"]},
+        {"title": "SRE global", "companyName": "C", "guid": "https://h.app/3", "locationRestrictions": []}]}
+    monkeypatch.setattr(himalayas.http, "get", lambda url, **kw: _Resp(hm))
+    jobs = himalayas.fetch({"himalayas": {"queries": ["sre"]}})
+    assert [j.title for j in jobs] == ["SRE", "SRE global"]  # a que exclui o Brasil fica de fora
+    assert jobs[0].tags == ["Senior"] and jobs[1].location == "Global"
