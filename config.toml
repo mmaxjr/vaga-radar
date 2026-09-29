@@ -65,6 +65,10 @@ days = 7
 # Pausa entre requisições (segundos) para não tomar bloqueio
 delay = 2.5
 
+[geekhunter]
+pages_per_term = 2
+delay = 1.5
+
 [notify]
 # Máximo de vagas por resumo (o restante fica só no site/JSON)
 max_items = 60

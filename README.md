@@ -19,6 +19,7 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 |---|---|---|
 | LinkedIn | Brasil | busca pública de visitante, filtro "remoto" |
 | Gupy | Brasil | API pública do portal de vagas |
+| GeekHunter | Brasil | listagem pública `/pt/vagas` pela busca oficial do site, só `workModality=remote` (fora "remoto em cidade"); nunca abre `/jobs/...`, que o robots.txt proíbe |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |

@@ -113,3 +113,28 @@ def test_linkedin_exige_prova_de_remoto():
     assert FLT.accepts(ok)
     assert not FLT.accepts(presencial)
     assert FLT.accepts(gupy)  # fontes que já filtram por remoto seguem confiáveis
+
+
+def test_parse_geekhunter():
+    import json as _json
+    from datetime import datetime, timezone
+
+    from vagas.sources import geekhunter
+
+    u1 = "https://www.geekhunter.com/pt/ntt-data/jobs/devops---sre-pleno--1"
+    u2 = "https://www.geekhunter.com/pt/acme-2/jobs/analista-de-redes-1"
+    ld = _json.dumps({"itemListElement": [
+        {"@type": "ListItem", "url": u1, "name": "Devops - SRE Pleno"},
+        {"@type": "ListItem", "url": u2, "name": "Analista de Redes"}]})
+    filler = "Tarefas e Responsabilidades configurar e manter a infraestrutura de rede da empresa"
+    html = f"""<script id="itemList" type="application/ld+json">{ld}</script>
+      <div><a href="{u1}">x</a><p>Publicada há 3 dias Devops - SRE Pleno Pleno Remoto {filler}</p></div>
+      <div><a href="{u2}">y</a><p>Publicada há 1 hora Analista de Redes Pleno São Paulo {filler}</p></div>"""
+    now = datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc)
+    # os <a> ficam no mesmo bloco do texto do cartão: coloca o texto dentro do <a>
+    html = html.replace(f'<a href="{u1}">x</a><p>', f'<a href="{u1}"><p>').replace("</p></div>", "</p></a></div>")
+    jobs = geekhunter.parse(html, now)
+    assert [j.title for j in jobs] == ["Devops - SRE Pleno"]  # o cartão sem "Remoto" é descartado
+    j = jobs[0]
+    assert (j.company, j.location, j.tags) == ("Ntt Data", "Remoto", ["Pleno"])
+    assert j.posted.startswith("2026-09-26T12:00")

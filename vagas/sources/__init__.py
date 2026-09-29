@@ -1,9 +1,10 @@
-from . import github, gupy, linkedin, programathor, remoteok, remotive, vagascombr, weworkremotely
+from . import geekhunter, github, gupy, linkedin, programathor, remoteok, remotive, vagascombr, weworkremotely
 
 # nome -> função fetch(cfg) -> list[Job]
 SOURCES = {
     "linkedin": linkedin.fetch,
     "gupy": gupy.fetch,
+    "geekhunter": geekhunter.fetch,
     "github": github.fetch,
     "programathor": programathor.fetch,
     "vagascombr": vagascombr.fetch,
