@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.env
+.venv/
+
+# Dados coletados e página gerada: ficam só na sua máquina
+docs/jobs.json
+docs/index.html
+
+# Currículo e qualquer arquivo pessoal
+curriculo*
+cv*

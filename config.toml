@@ -1,0 +1,70 @@
+# Configuração do agregador. Edite à vontade.
+# Só entram vagas REMOTAS (as fontes já filtram por isso). Para mudar de área, troque os termos abaixo.
+
+[search]
+# Termos usados nas buscas das fontes que têm busca (Gupy, LinkedIn, Vagas.com.br)
+terms = [
+  "desenvolvedor", "programador", "engenheiro de software", "developer", "backend", "frontend", "full stack",
+  "devops", "sre", "infraestrutura", "analista de infraestrutura", "sysadmin", "cloud",
+  "redes", "network engineer",
+  "segurança da informação", "cybersecurity", "pentest",
+]
+
+# A vaga só passa se o título contiver ao menos uma destas (regex, sem diferenciar maiúsculas).
+# Palavras curtas usam (?<![a-z])...(?![a-z]) para casar só a palavra inteira.
+include = [
+  # programação
+  'desenvolv', 'programador', 'developer', 'software', 'back-?end', 'front-?end', 'full-?stack',
+  '(?<![a-z])dev(?![a-z])', 'python', 'javascript', 'typescript', 'node', 'react', 'angular', 'vue',
+  '(?<![a-z])java(?![a-z])', '(?<![a-z])go(?![a-z])', 'golang', 'php', 'ruby', '[.]net', 'c#', 'mobile', 'android', 'flutter',
+  'engenheiro de dados', 'data engineer', 'machine learning', 'automação',
+  # infra / devops / cloud
+  'infra', 'devops', 'devsecops', '(?<![a-z])sre(?![a-z])', 'sysadmin', 'sistemas', 'linux', 'kubernetes', 'docker',
+  'cloud', '(?<![a-z])aws(?![a-z])', 'azure', 'gcp', 'terraform', 'observabilidade', 'plataforma', 'platform',
+  # redes
+  'network', 'redes', 'cisco', 'firewall', 'wireless', 'telecom', '(?<![a-z])noc(?![a-z])',
+  # segurança
+  'seguran[cç]a da informa', 'seguran[cç]a cibern', 'cyber', 'ciberseguran', 'infosec', 'appsec', 'secops',
+  '(?<![a-z])soc(?![a-z])', 'pentest', 'security', 'threat', 'siem', 'vulnerab', '(?<![a-z])iam(?![a-z])',
+]
+
+# Descarta a vaga se o título contiver alguma destas
+exclude = [
+  'vendas', 'comercial', 'estagi', '(?<![a-z])intern(?![a-z])', 'recrutador', 'marketing',
+  # "engenheiro/segurança" de outras áreas
+  'civil', 'mec[aâ]nic', 'el[eé]trica', 'el[eé]trico', 'qu[ií]mic', 'mechanical', 'electrical',
+  'seguran[cç]a do trabalho', 'seguran[cç]a patrimonial', 'vigilante', 'porteiro',
+]
+
+# Ignora vagas publicadas há mais dias que isso
+max_age_days = 30
+
+# Vagas internacionais só entram se aceitarem candidatos do Brasil (ou de qualquer lugar)
+international_ok_regions = ["worldwide", "anywhere", "global", "latam", "latin america", "americas", "brazil", "brasil", "south america"]
+
+[github]
+# Repositórios de vagas da comunidade (issues abertas = vagas)
+repos = [
+  "frontendbr/vagas",
+  "backend-br/vagas",
+  "androiddevbr/vagas",
+  "react-brasil/vagas",
+  "datascience-br/vagas",
+  "qa-brasil/vagas",
+]
+max_pages = 2
+
+[linkedin]
+location = "Brazil"
+pages_per_term = 2
+days = 7
+# Pausa entre requisições (segundos) para não tomar bloqueio
+delay = 2.5
+
+[notify]
+# Máximo de vagas por resumo (o restante fica só no site/JSON)
+max_items = 60
+
+[storage]
+path = "docs/jobs.json"
+keep_days = 45

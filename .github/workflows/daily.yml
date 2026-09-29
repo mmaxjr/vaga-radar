@@ -1,0 +1,68 @@
+name: Coleta diária
+
+# Roda todo dia, guarda o histórico em cache (para só avisar vagas novas) e manda o resumo no Telegram.
+# Não faz commit de dados coletados. O site (GitHub Pages) é opcional: veja "Site público" no README.
+
+on:
+  schedule:
+    - cron: "0 11 * * *"  # 08h em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coleta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Restaurar histórico de vagas
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/jobs.json
+          key: vagas-${{ github.run_id }}
+          restore-keys: vagas-
+
+      - name: Coletar e notificar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # linkedin fica fora da página pública (os termos deles limitam a republicação)
+        run: python -m vagas --hide-sources linkedin
+
+      - name: Guardar histórico de vagas
+        uses: actions/cache/save@v4
+        with:
+          path: docs/jobs.json
+          key: vagas-${{ github.run_id }}
+
+      - name: Montar site
+        if: vars.ENABLE_PAGES == 'true'
+        run: |
+          mkdir _site
+          cp docs/index.html _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        if: vars.ENABLE_PAGES == 'true'
+        with:
+          path: _site
+
+  site:
+    needs: coleta
+    if: vars.ENABLE_PAGES == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

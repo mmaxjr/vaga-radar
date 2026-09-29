@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vagas Remotas TI</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2128; --muted:#636c76; --line:#d8dee4; --accent:#0969da; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e; --line:#30363d; --accent:#4493f8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 2px; }
+  .sub { color:var(--muted); margin:0 0 14px; font-size:13px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; position:sticky; top:0; background:var(--bg); padding:8px 0; z-index:1; }
+  input, select { padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); font:inherit; }
+  input { flex:1 1 220px; }
+  .job { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:8px 0; }
+  .job a { color:var(--accent); font-weight:600; text-decoration:none; }
+  .job a:hover { text-decoration:underline; }
+  .meta { color:var(--muted); font-size:13px; margin-top:3px; }
+  .tag { display:inline-block; border:1px solid var(--line); border-radius:99px; padding:0 8px; font-size:12px; margin-right:4px; }
+  .new { color:#1a7f37; font-weight:600; }
+  .empty { color:var(--muted); text-align:center; padding:40px 0; }
+  footer { color:var(--muted); font-size:12px; margin:24px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Vagas remotas de TI</h1>
+  <p class="sub" id="sub"></p>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Filtrar: devops, python, segurança, pleno..." autofocus>
+    <select id="src"><option value="">Todas as fontes</option></select>
+    <select id="where">
+      <option value="">Brasil + internacional</option>
+      <option value="br">Só Brasil</option>
+      <option value="intl">Só internacional</option>
+    </select>
+  </div>
+  <div id="list"></div>
+  <footer>
+    Fontes: LinkedIn, Gupy, Programathor, Vagas.com.br, repositórios de vagas no GitHub (frontendbr, backend-br e outros),
+    <a href="https://remoteok.com">Remote OK</a>, <a href="https://weworkremotely.com">We Work Remotely</a> e
+    <a href="https://remotive.com">Remotive</a>. Confira sempre a vaga no site de origem.
+  </footer>
+</main>
+<script>
+const DATA = /*JOBS_JSON*/;
+const jobs = DATA.jobs;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const sources = [...new Set(jobs.map(j => j.source))].sort();
+for (const s of sources) $("src").insertAdjacentHTML("beforeend", `<option>${esc(s)}</option>`);
+
+function ago(iso) {
+  if (!iso) return "";
+  const h = (Date.now() - new Date(iso)) / 36e5;
+  if (isNaN(h)) return "";
+  if (h < 1) return "agora há pouco";
+  if (h < 24) return `há ${Math.floor(h)} h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "ontem" : `há ${d} dias`;
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), src = $("src").value, where = $("where").value;
+  const rows = jobs.filter(j =>
+    (!src || j.source === src) &&
+    (!where || (where === "intl") === !!j.international) &&
+    (!q || [j.title, j.company, j.location, j.source, ...(j.tags || [])].join(" ").toLowerCase().includes(q)));
+  $("sub").textContent = `${rows.length} de ${jobs.length} vagas · atualizado em ${new Date(DATA.updated).toLocaleString("pt-BR")}`;
+  $("list").innerHTML = rows.length ? rows.slice(0, 300).map(j => {
+    const when = ago(j.posted || j.first_seen);
+    const fresh = (Date.now() - new Date(j.posted || j.first_seen)) < 864e5 * 2;
+    return `<div class="job">
+      <a href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">${esc(j.title)}</a>
+      <div class="meta">${[esc(j.company), esc(j.location), fresh ? `<span class="new">${when}</span>` : when, j.salary && esc(j.salary)].filter(Boolean).join(" · ")}
+        <span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+    </div>`;
+  }).join("") : `<div class="empty">Nenhuma vaga com esse filtro.</div>`;
+}
+["input", "change"].forEach(e => document.querySelector(".bar").addEventListener(e, render));
+render();
+</script>
+</body>
+</html>
