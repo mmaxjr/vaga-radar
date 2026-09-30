@@ -319,3 +319,26 @@ def test_jobicy_uma_falha_nao_derruba_as_demais(monkeypatch):
     monkeypatch.setattr(jobicy.http, "get", lambda url, **kw: next(respostas))
     jobs = jobicy.fetch({"jobicy": {"geos": ["brazil"], "tags": ["a", "b", "c"]}})
     assert [j.title for j in jobs] == ["SRE"]  # o 400 do primeiro tag não impediu o segundo
+
+
+def test_parse_zohorecruit():
+    import html as _html
+    import json as _json
+
+    from vagas.sources import zohorecruit
+
+    data = [
+        {"Remote_Job": True, "Posting_Title": "Profissional Red Team ", "City": None, "id": "111", "Date_Opened": "2026-06-21", "Publish": True},
+        {"Remote_Job": False, "Posting_Title": "Analista de Redes", "City": "Maringá", "id": "222", "Date_Opened": "2026-09-01", "Publish": True},
+        {"Remote_Job": False, "Posting_Title": "Analista de Redes", "City": "Vitória", "id": "333", "Date_Opened": "2026-09-01", "Publish": True},
+        {"Remote_Job": True, "Posting_Title": "Rascunho", "City": None, "id": "444", "Publish": False},
+    ]
+    page = '<input type="hidden" value="' + _html.escape(_json.dumps(data), quote=True).replace("&quot;", "&#34;") + '">'
+    remoto, aqui = zohorecruit.parse(page, "spassu", {"maringa"})
+    assert (remoto.scope, remoto.location, remoto.title) == ("remoto", "Remoto", "Profissional Red Team")
+    assert remoto.url == "https://spassu.zohorecruit.com/jobs/Careers/111/Profissional-Red-Team"
+    assert remoto.posted == "" and remoto.tags == ["aberta em 2026-06-21"]  # sem data de publicação: não é cortada por idade
+    assert FLT.accepts(remoto)  # vaga aberta há meses ainda passa (Red Team)
+    assert (aqui.scope, aqui.location) == ("local", "Maringá")
+    assert zohorecruit.parse(page, "spassu", set()) == [remoto]  # sem cidade configurada: só as remotas
+    assert zohorecruit.parse("<html></html>", "spassu") == []

@@ -31,6 +31,10 @@ include = [
   # segurança
   'seguran[cç]a da informa', 'seguran[cç]a cibern', 'cyber', 'ciberseguran', 'infosec', 'appsec', 'secops',
   '(?<![a-z])soc(?![a-z])', 'pentest', 'security', 'threat', 'siem', 'vulnerab', '(?<![a-z])iam(?![a-z])',
+  'seguran[cç]a de (aplica|dados|redes|sistemas|infra)', 'red team', 'blue team', 'purple team', 'gest[aã]o de riscos', '(?<![a-z])risk', 'compliance', 'governan', 'privacidade', 'lgpd',
+  '(?<![a-z])grc(?![a-z])', '(?<![a-z])s[.]i(?![a-z])',
+  # bancos de dados
+  '(?<![a-z])dba(?![a-z])', 'banco de dados', 'database', 'postgres',
 ]
 
 # Descarta a vaga se o título contiver alguma destas
@@ -88,6 +92,10 @@ days = 14
 # O "slug" é a parte final do endereço: boards.greenhouse.io/<slug>  ou  jobs.lever.co/<slug>
 greenhouse = ["canonical", "datadog", "elastic", "gitlab", "twilio", "remotecom", "coinbase", "stone", "clara", "vtex", "quintoandar"]
 lever = []
+
+[zohorecruit]
+# Páginas de carreira <nome>.zohorecruit.com (Zoho Recruit). Só vagas marcadas "Trabalho remoto" (e as da sua cidade, se [local] ligado)
+sites = ["spassu"]
 
 [jobicy]
 geos = ["brazil", "anywhere"]

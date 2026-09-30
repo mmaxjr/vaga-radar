@@ -24,6 +24,7 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 | Quadros de vagas de empresas (Canonical, Datadog, Elastic, GitLab e outras) | Global | APIs públicas Greenhouse/Lever, lista de empresas em `[companies]`; só vagas que se declaram remotas |
 | [Jobicy](https://jobicy.com) e [Himalayas](https://himalayas.app) | Internacional | API pública; só vagas abertas ao Brasil, LATAM ou "anywhere" |
 | Empregare | Brasil | HTML das listagens (remoto, por termo e por cidade); o cartão informa o regime, então só entra o que diz "Totalmente Remoto" |
+| Páginas de carreira do Zoho Recruit (ex.: Spassu) | Brasil | a listagem pública já traz todas as vagas com o campo "Trabalho remoto"; lista de empresas em `[zohorecruit]` |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |
