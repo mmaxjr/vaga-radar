@@ -24,6 +24,8 @@ def collect(cfg: dict, names: list[str]) -> list:
         try:
             jobs = SOURCES[name](cfg)
             log.info("%-15s %4d vagas coletadas", name, len(jobs))
+            if not jobs:
+                log.warning("%s devolveu 0 vagas: a fonte pode ter quebrado (endereço ou layout mudou)", name)
             return jobs
         except Exception:  # uma fonte quebrada não pode derrubar as outras
             log.exception("fonte %s falhou", name)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from .. import http
 from ..models import Job
 
-API = "https://employability-portal.gupy.io/api/v1/jobs"
+API = "https://portal.gupy.io/api/job-search/jobs"  # o antigo employability-portal.gupy.io/api/v1/jobs saiu do ar (404)
 PAGE = 50
 
 
