@@ -38,6 +38,15 @@ def fetch(cfg: dict) -> list[Job]:
     return jobs
 
 
+def job_text(job: Job) -> str | None:
+    """Texto da página pública da vaga (título, local e descrição). None se não respondeu."""
+    job_id = job.url.rstrip("/").rsplit("-", 1)[-1]
+    r = http.get(f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}", retries=0)
+    if r is None:
+        return None
+    return " ".join(BeautifulSoup(http.decode(r), "lxml").get_text(" ").split())
+
+
 def parse(html: str) -> list[Job]:
     soup = BeautifulSoup(html, "lxml")
     jobs = []

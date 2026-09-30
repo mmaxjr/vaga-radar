@@ -13,12 +13,17 @@ API = "https://jobicy.com/api/v2/remote-jobs"
 def fetch(cfg: dict) -> list[Job]:
     jc = cfg.get("jobicy", {})
     jobs: dict[str, Job] = {}
+    failures = 0  # a API rejeita algumas combinações (HTTP 400): pula só essa; desiste após 3 falhas seguidas
     for geo in jc.get("geos", ["brazil", "anywhere"]):
         for tag in jc.get("tags", ["devops", "sre", "infrastructure", "security", "network", "linux"]):
             r = http.get(API, params={"count": 50, "geo": geo, "tag": tag})
             time.sleep(jc.get("delay", 1.0))
             if r is None:
-                return list(jobs.values())  # limite de uso: devolve o que já temos
+                failures += 1
+                if failures >= 3:
+                    return list(jobs.values())  # provável limite de uso: devolve o que já temos
+                continue
+            failures = 0
             for it in r.json().get("jobs", []):
                 jobs.setdefault(it["url"], Job(
                     source="jobicy",

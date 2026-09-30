@@ -66,6 +66,17 @@ Só entram vagas **remotas**: cada fonte já é consultada com o filtro de remot
 Dica de regex: para casar só a palavra inteira use `(?<![a-z])go(?![a-z])` (evita casar "Goiás"). Se preferir
 `\b`, use aspas simples no TOML (`'\bgo\b'`), que não interpretam a barra invertida.
 
+## Como o filtro decide
+
+1. **Área** (`include`/`exclude`): o título precisa casar com um padrão de interesse. Por padrão inclui funções próximas de TI
+   (suporte técnico, help desk, administração de sistemas, QA, dados, telecom), não só a área principal.
+2. **Regime remoto**: fontes que já filtram por remoto (Gupy, InfoJobs, GeekHunter...) são confiáveis. O **LinkedIn** não é:
+   o filtro "remoto" dele devolve muita vaga presencial. Por isso, a vaga do LinkedIn que passou nos outros filtros mas não diz
+   "remoto" no título tem a **descrição lida** (`[verify]`): entra só se afirma trabalho remoto ("100% remoto", "fully remote"...) e
+   não cita presencial, híbrido ou escritório. Na dúvida, descarta. O resultado fica no histórico para não reler a mesma vaga.
+3. **Região** (vagas internacionais): só abertas ao Brasil, LATAM ou "anywhere".
+4. **Idade** (`max_age_days`).
+
 ## Vagas na sua cidade
 
 Além das remotas, dá para incluir vagas da **sua cidade em qualquer regime** (presencial, híbrido ou remoto).

@@ -14,11 +14,16 @@ API = "https://himalayas.app/jobs/api/search"
 def fetch(cfg: dict) -> list[Job]:
     hc = cfg.get("himalayas", {})
     jobs: dict[str, Job] = {}
+    failures = 0
     for query in hc.get("queries", ["devops", "sre", "infrastructure", "security", "network engineer", "linux"]):
         r = http.get(API, params={"q": query, "country": "Brazil"})
         time.sleep(hc.get("delay", 1.0))
         if r is None:
-            return list(jobs.values())
+            failures += 1
+            if failures >= 3:
+                return list(jobs.values())
+            continue
+        failures = 0
         for it in r.json().get("jobs", []):
             places = it.get("locationRestrictions") or []
             if places and "Brazil" not in places:

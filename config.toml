@@ -18,7 +18,11 @@ include = [
   '(?<![a-z])dev(?![a-z])', 'python', 'javascript', 'typescript', 'node', 'react', 'angular', 'vue',
   '(?<![a-z])java(?![a-z])', '(?<![a-z])go(?![a-z])', 'golang', 'php', 'ruby', '[.]net', 'c#', 'mobile', 'android', 'flutter',
   'engenheiro de dados', 'data engineer', 'machine learning', 'automação',
-  '(?<![a-z])ti(?![a-z])', 'inform[aá]tica',
+  '(?<![a-z])(ti|it)(?![a-z])', 'inform[aá]tica',
+  # funções próximas (suporte, sistemas, dados, testes, implantação)
+  'suporte t[eé]cnico', 'technical support', 'it support', 'help ?desk', 'service ?desk', 'support engineer',
+  'analista de sistemas', 'administrador', 'administrator', 'implanta', 'implementa', 'integra[cç]', '(?<![a-z])qa(?![a-z])',
+  '(?<![a-z])(testes?|testing|tester)(?![a-z])', 'dados', '(?<![a-z])data(?![a-z])', '(?<![a-z])rpa(?![a-z])', 'voip', 'telecom', 'engenheiro de',
   # infra / devops / cloud
   'infra', 'devops', 'devsecops', '(?<![a-z])sre(?![a-z])', 'sysadmin', 'sistemas', 'linux', 'kubernetes', 'docker',
   'cloud', '(?<![a-z])aws(?![a-z])', 'azure', 'gcp', 'terraform', 'observabilidade', 'plataforma', 'platform',
@@ -35,6 +39,7 @@ exclude = [
   # "engenheiro/segurança" de outras áreas
   'civil', 'mec[aâ]nic', 'el[eé]trica', 'el[eé]trico', 'qu[ií]mic', 'mechanical', 'electrical',
   'seguran[cç]a do trabalho', 'seguran[cç]a patrimonial', 'vigilante', 'porteiro',
+  'engenheiro de produ', 'engenheiro agr', 'engenheiro florestal', 'engenheiro de alimentos', 'engenheiro de petr',
 ]
 
 # Fontes que não confirmam o regime da vaga (o filtro "remoto" do LinkedIn falha bastante):
@@ -94,6 +99,11 @@ queries = ["devops", "sre", "infrastructure", "security", "network engineer", "l
 [geekhunter]
 pages_per_term = 2
 delay = 1.5
+
+[verify]
+# Lê a descrição das vagas do LinkedIn que não dizem "remoto" no título, para confirmar o regime
+max_per_run = 60
+delay = 2.0
 
 [notify]
 # Máximo de vagas por resumo (o restante fica só no site/JSON)

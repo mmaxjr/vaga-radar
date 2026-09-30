@@ -8,6 +8,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from . import verify
 from .filters import JobFilter
 from .notify import format_digest, send_telegram
 from .site import render_site
@@ -54,12 +55,21 @@ def main(argv: list[str] | None = None) -> int:
         ap.error(f"fonte desconhecida: {', '.join(unknown)}")
 
     flt = JobFilter(cfg)
-    found = collect(cfg, names)
+    store = Store(cfg["storage"]["path"], cfg["storage"].get("keep_days", 45))
+    found = list({j.id: j for j in collect(cfg, names)}.values())  # a mesma vaga pode vir por mais de um termo
     kept = [j for j in found if flt.accepts(j)]
+
+    # Vagas que passam em tudo, menos na prova de "remoto" (ex.: LinkedIn): lê a descrição das que ainda não vimos
+    pending = [j for j in found if flt.needs_proof(j) and flt.accepts(j, assume_remote=True) and not store.is_known(j)]
+    if pending:
+        vcfg = cfg.get("verify", {})
+        confirmed, denied = verify.check(pending, vcfg.get("max_per_run", 60), vcfg.get("delay", 2.0))
+        kept += confirmed
+        if not args.dry_run:
+            store.reject(denied)
+
     per_source = Counter(j.source.split(":")[0] for j in kept)
     log.info("%d coletadas, %d passaram no filtro: %s", len(found), len(kept), dict(per_source))
-
-    store = Store(cfg["storage"]["path"], cfg["storage"].get("keep_days", 45))
     new = store.add_new(kept)
     log.info("%d vagas novas", len(new))
 

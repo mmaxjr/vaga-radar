@@ -259,3 +259,63 @@ def test_parse_empregare():
     so_remoto = empregare.parse(card("c_3", "Dev", "Totalmente Remoto").replace("Maringá, PR, BR", "Totalmente Remoto"), today)
     assert so_remoto[0].location == "Totalmente Remoto"  # não repete o regime
     assert presencial.posted.startswith("2025-12-30")  # 30/dezembro no futuro = ano passado
+
+
+def test_funcoes_proximas_agora_passam():
+    for t in ["IT Support Engineer", "Analista de Suporte Técnico Pleno", "Systems Administrator", "Help Desk N2",
+              "Analista de Sistemas", "Engenheiro de Dados", "Analista de QA", "Técnico em Telecom"]:
+        assert FLT.accepts(job(t)), t
+    for t in ["Engenheiro de Produção", "Contest Manager", "Analista de Vendas TI"]:
+        assert not FLT.accepts(job(t)), t
+
+
+def test_needs_proof_e_assume_remote():
+    sem_prova = Job(source="linkedin", title="Analista de Redes Pleno", url="https://l.com/7", location="Curitiba")
+    assert FLT.needs_proof(sem_prova) and not FLT.accepts(sem_prova)
+    assert FLT.accepts(sem_prova, assume_remote=True)  # descrição confirmou o remoto
+    com_prova = Job(source="linkedin", title="Analista de Redes - Remoto", url="https://l.com/8", location="Brasil")
+    assert not FLT.needs_proof(com_prova) and FLT.accepts(com_prova)
+    assert not FLT.needs_proof(Job(source="gupy", title="Analista de Redes", url="https://g.com/4"))
+
+
+def test_verificacao_le_a_descricao():
+    from vagas import verify
+
+    assert verify.is_remote_text("Esta vaga é 100% remota. Atuação em home office.") is True
+    assert verify.is_remote_text("Trabalho remoto, com encontros presenciais mensais.") is False  # cita presencial
+    assert verify.is_remote_text("Monitoramento remoto de servidores e acesso remoto via VPN.") is False  # não é regime
+    assert verify.is_remote_text("Fully remote role. Hybrid model with 2 days in office.") is False  # regime híbrido: descarta
+    assert verify.is_remote_text("Vaga 100% remota. Experiência em nuvem híbrida e ambientes híbridos.") is True  # híbrido = tecnologia
+    assert verify.is_remote_text("Auxílio home office. Vaga em Porto Alegre. Work from Anywhere policy.") is False  # só benefícios
+
+
+def test_verify_check_para_no_bloqueio(monkeypatch):
+    from vagas import verify
+
+    textos = {"a": "Trabalho remoto 100% remoto.", "b": "Vaga presencial em Maringá.", "c": None, "d": "home office"}
+    monkeypatch.setitem(verify.TEXT_FETCHERS, "linkedin", lambda j: textos[j.title])
+    monkeypatch.setattr(verify.time, "sleep", lambda s: None)
+    jobs = [Job(source="linkedin", title=t, url=f"https://l.com/{t}") for t in "abcd"]
+    ok, no = verify.check(jobs, limit=10, delay=0)
+    assert [j.title for j in ok] == ["a"] and [j.title for j in no] == ["b"]  # parou em "c" (bloqueio); "d" fica para depois
+
+
+def test_store_lembra_descartadas(tmp_path):
+    path = tmp_path / "jobs.json"
+    store = Store(path)
+    velha, nova = job("Dev A", url="https://a.com/1"), job("Dev B", url="https://b.com/2")
+    store.reject([velha])
+    store.add_new([nova])
+    store.save()
+    again = Store(path)
+    assert again.is_known(velha) and again.is_known(nova) and not again.is_known(job("Dev C", url="https://c.com/3"))
+
+
+def test_jobicy_uma_falha_nao_derruba_as_demais(monkeypatch):
+    from vagas.sources import jobicy
+
+    monkeypatch.setattr(jobicy.time, "sleep", lambda s: None)
+    respostas = iter([None, _Resp({"jobs": [{"url": "https://jobicy.com/jobs/9", "jobTitle": "SRE", "jobGeo": "LATAM"}]}), None])
+    monkeypatch.setattr(jobicy.http, "get", lambda url, **kw: next(respostas))
+    jobs = jobicy.fetch({"jobicy": {"geos": ["brazil"], "tags": ["a", "b", "c"]}})
+    assert [j.title for j in jobs] == ["SRE"]  # o 400 do primeiro tag não impediu o segundo

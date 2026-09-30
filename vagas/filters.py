@@ -21,7 +21,8 @@ class JobFilter:
         regions = s.get("international_ok_regions", [])
         self.regions = re.compile("|".join(map(re.escape, regions)), re.I) if regions else None
 
-    def accepts(self, job: Job) -> bool:
+    def accepts(self, job: Job, *, assume_remote: bool = False) -> bool:
+        """`assume_remote`: a vaga já teve o regime remoto confirmado por outro meio (ex.: leitura da descrição)."""
         if not job.title or not job.url:
             return False
         if not self.include.search(job.title):
@@ -30,11 +31,16 @@ class JobFilter:
             return False
         # Vagas "local" (sua cidade) valem em qualquer regime; as demais precisam ser 100% remotas
         if job.scope == "remoto":
-            if job.source in self.strict_sources and not REMOTE_WORDS.search(f"{job.title} {job.location}"):
+            if not assume_remote and self.needs_proof(job):
                 return False
             if job.international and not self.region_ok(job.location):
                 return False
         return not self.too_old(job)
+
+    def needs_proof(self, job: Job) -> bool:
+        """Fonte que não garante o regime e a vaga não diz "remoto" no título/local."""
+        return (job.scope == "remoto" and job.source in self.strict_sources
+                and not REMOTE_WORDS.search(f"{job.title} {job.location}"))
 
     def region_ok(self, location: str) -> bool:
         # Sem informação de região = normalmente "qualquer lugar"

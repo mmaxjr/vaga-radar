@@ -14,10 +14,21 @@ class Store:
         self.path = Path(path)
         self.keep_days = keep_days
         self.jobs: dict[str, Job] = {}
+        self.rejected: dict[str, str] = {}  # id -> data em que foi descartada (para não reverificar todo dia)
         if self.path.exists():
-            for d in json.loads(self.path.read_text(encoding="utf-8")).get("jobs", []):
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            for d in data.get("jobs", []):
                 job = Job.from_dict(d)
                 self.jobs[job.id] = job
+            self.rejected = data.get("rejected", {})
+
+    def is_known(self, job: Job) -> bool:
+        return job.id in self.jobs or job.id in self.rejected
+
+    def reject(self, jobs: list[Job]) -> None:
+        today = datetime.now(timezone.utc).date().isoformat()
+        for job in jobs:
+            self.rejected[job.id] = today
 
     def add_new(self, found: list[Job]) -> list[Job]:
         """Adiciona as vagas inéditas e devolve só essas."""
@@ -31,6 +42,7 @@ class Store:
     def prune(self) -> None:
         limit = (datetime.now(timezone.utc) - timedelta(days=self.keep_days)).isoformat()
         self.jobs = {i: j for i, j in self.jobs.items() if j.first_seen >= limit}
+        self.rejected = {i: d for i, d in self.rejected.items() if d >= limit[:10]}
 
     def save(self) -> None:
         self.prune()
@@ -39,5 +51,6 @@ class Store:
         payload = {
             "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "jobs": [j.to_dict() for j in ordered],
+            "rejected": self.rejected,
         }
         self.path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
