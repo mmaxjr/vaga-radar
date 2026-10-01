@@ -39,7 +39,7 @@ def test_ficha_aplica_penalidades_com_motivo():
     base = pontuar(job(), PERFIL, ficha=NEUTRA, hoje=HOJE)  # ficha neutra: já inclui o bônus de vaga em português
     f = Ficha(remoto="confirmado", cloud=["aws"], residencia="Curitiba/PR", plantao=True, ingles="avançado")
     p = pontuar(job(), PERFIL, ficha=f, hoje=HOJE)
-    assert base.pontos - p.pontos == 8 + 50 + 6 + 6
+    assert base.pontos - p.pontos == 12 + 50 + 6 + 6
     assert {"exige aws", "residir em Curitiba/PR", "plantão", "inglês avançado"} <= set(p.motivos)
     assert pontuar(job(), PERFIL, ficha=Ficha(remoto="confirmado", ingles="avançado"), hoje=HOJE).pontos == base.pontos - 6
     sabe_ingles = Perfil({"bgp": 5}, [], {}, "avançado", 10)

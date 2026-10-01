@@ -63,3 +63,15 @@ def test_interesses_somam_os_pesos_das_palavras_do_titulo(tmp_path):
     assert perfil.interesse("Analista de Suporte de Redes") == 8
     assert perfil.interesse("Analista de Segurança") == 4
     assert perfil.interesse("Designer") == 0
+
+
+def test_curriculo_em_ingles_para_vaga_em_ingles(tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text('[habilidades]\nlinux = 5\n[curriculos]\npadrao = "PT"\npadrao_en = "EN"\n"redes" = "Redes"\n', encoding="utf-8")
+    perfil = Perfil.carregar(p)
+    assert perfil.curriculo("Analista de Redes", "pt") == "Redes"
+    assert perfil.curriculo("Network Engineer", "en") == "EN"
+    assert perfil.curriculo("Designer", "pt") == "PT"
+    sem_en = tmp_path / "q.toml"
+    sem_en.write_text('[habilidades]\nlinux = 5\n[curriculos]\npadrao = "PT"\n', encoding="utf-8")
+    assert Perfil.carregar(sem_en).curriculo("Engineer", "en") == "PT"  # sem padrao_en, cai no padrão

@@ -113,7 +113,7 @@ def pontuar(job: Job, perfil: Perfil, texto: str = "", ficha: Ficha | None = Non
         if ficha.idioma == "pt":
             pontos += 5
         for termo in ficha.cloud[:3]:
-            pontos -= 8
+            pontos -= 12
             motivos.append(f"exige {termo}")
         if ficha.residencia:
             pontos -= 50

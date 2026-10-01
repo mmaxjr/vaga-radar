@@ -86,7 +86,7 @@ def formatar(top: list[Item], resto: dict[str, list[Item]], perfil: Perfil, hoje
             linhas.append(f"    Falta: {', '.join(falta)}")
         if p.motivos:
             linhas.append(f"    Atenção: {' | '.join(p.motivos)}")
-        sugestao = perfil.curriculo(f"{j.title} {' '.join(p.cobre)}")
+        sugestao = perfil.curriculo(f"{j.title} {' '.join(p.cobre)}", f.idioma)
         if sugestao:
             linhas.append(f"    Currículo sugerido: {sugestao} (confirme comigo)")
         linhas.append("")

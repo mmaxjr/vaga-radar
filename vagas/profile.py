@@ -21,6 +21,7 @@ Exemplo de perfil.toml:
 
     [curriculos]               # regex = nome do currículo; vale o primeiro que casar
     padrao = "Curriculo-Completo"
+    padrao_en = "Resume-EN"    # opcional: usado quando a vaga está em inglês
     "redes|network" = "Analista-de-Redes"
 """
 from __future__ import annotations
@@ -72,8 +73,11 @@ class Perfil:
     def fora_do_perfil(self, titulo: str) -> list[str]:
         return [t for t in self.evitar if _tem(titulo, t)]
 
-    def curriculo(self, texto: str) -> str:
+    def curriculo(self, texto: str, idioma: str = "pt") -> str:
+        """Currículo sugerido: o de inglês (`padrao_en`) para vaga em inglês; senão o primeiro padrão que casar; senão `padrao`."""
+        if idioma == "en" and self.curriculos.get("padrao_en"):
+            return self.curriculos["padrao_en"]
         for padrao, nome in self.curriculos.items():
-            if padrao != "padrao" and re.search(padrao, texto, re.I):
+            if padrao not in ("padrao", "padrao_en") and re.search(padrao, texto, re.I):
                 return nome
         return self.curriculos.get("padrao", "")
