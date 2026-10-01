@@ -89,7 +89,8 @@ def formatar(top: list[Item], resto: dict[str, list[Item]], perfil: Perfil, hoje
             linhas.append(f"    Encaixe {p.encaixe}% | Remoto: {f.remoto} | Contrato: {f.contrato} | Inglês: {f.ingles} | Prazo: {_prazo(f.prazo)}")
         if p.cobre:
             linhas.append(f"    Cobre: {', '.join(p.cobre)}")
-        falta = [f"{t} (exigido)" for t in f.cloud] + [f"{t} (diferencial)" for t in f.cloud_desejavel]
+        falta = ([f"{t} (exigido)" for t in f.cloud] + [f"{t} (diferencial)" for t in f.cloud_desejavel]
+                 + [f"certificação {c.upper()}" for c in f.certificacoes if c not in perfil.certificacoes])
         if falta:
             linhas.append(f"    Falta: {', '.join(falta)}")
         if p.motivos:

@@ -75,3 +75,9 @@ def test_curriculo_em_ingles_para_vaga_em_ingles(tmp_path):
     sem_en = tmp_path / "q.toml"
     sem_en.write_text('[habilidades]\nlinux = 5\n[curriculos]\npadrao = "PT"\n', encoding="utf-8")
     assert Perfil.carregar(sem_en).curriculo("Engineer", "en") == "PT"  # sem padrao_en, cai no padrão
+
+
+def test_certificacoes_que_voce_tem(tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text('[habilidades]\nlinux = 5\n[certificacoes]\npossui = ["CCNA", "MTCNA"]\n', encoding="utf-8")
+    assert Perfil.carregar(p).certificacoes == ["ccna", "mtcna"]

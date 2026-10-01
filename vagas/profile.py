@@ -16,6 +16,9 @@ Exemplo de perfil.toml:
     redes = 5
     suporte = 3
 
+    [certificacoes]            # as que você TEM; vaga que exige outra perde pontos
+    possui = ["ccna", "mtcna"]
+
     [evitar]                   # cargos que casam por palavra mas estão fora do seu perfil: perdem pontos
     termos = ["kernel", "firmware"]
 
@@ -45,6 +48,7 @@ class Perfil:
     referencia: int = 30
     evitar: list[str] = field(default_factory=list)  # termos de cargos fora do perfil (ex.: kernel, firmware)
     interesses: dict[str, int] = field(default_factory=dict)  # palavras de TÍTULO que indicam a área que você procura
+    certificacoes: list[str] = field(default_factory=list)  # certificações que você TEM (nomes em minúsculas, ex.: ccna)
 
     @classmethod
     def carregar(cls, caminho: str | Path) -> "Perfil":
@@ -58,6 +62,7 @@ class Perfil:
             referencia=int(meta.get("referencia", 30)),
             evitar=list(dados.get("evitar", {}).get("termos", [])),
             interesses={k: int(v) for k, v in dados.get("interesses", {}).items()},
+            certificacoes=[c.lower() for c in dados.get("certificacoes", {}).get("possui", [])],
         )
 
     def encaixe(self, texto: str) -> tuple[int, list[str]]:

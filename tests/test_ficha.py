@@ -53,3 +53,16 @@ def test_descricao_nao_lida():
     f = analisar("", GAPS, lida=False)
     assert f.lida is False and f.cloud == [] and f.ingles == "n/d"
     assert isinstance(f, Ficha)
+
+
+def test_contrato_ignora_prova_de_experiencia():
+    t = "Experiência em segurança da informação demonstrada por meio de contrato de Pessoa Jurídica ou Carteira de Trabalho."
+    assert analisar(t, GAPS).contrato == "n/d"
+    assert analisar("Experiência comprovada em redes. Contratação: PJ.", GAPS).contrato == "PJ"
+
+
+def test_certificacoes_exigidas_x_diferencial():
+    t = "Requisitos: Superior completo. Certificação ITIL 4 Foundation e CySA+. Diferenciais: CISSP, AWS Certified."
+    f = analisar(t, GAPS)
+    assert f.certificacoes == ["itil", "cysa+"]
+    assert analisar("Experiência com Linux.", GAPS).certificacoes == []

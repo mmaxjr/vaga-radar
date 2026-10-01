@@ -27,6 +27,14 @@ PJ = re.compile(r"(?<![a-z])pj(?![a-z])|pessoa jur[ií]dica|prestador de servi[c
 CLT = re.compile(r"(?<![a-z])clt(?![a-z])|carteira assinada", re.I)
 RESIDENCIA = re.compile(r"(?:[Rr]esidir|[Mm]orar)\s+(?:em|na|no|nas|nos)\s+([A-ZÀ-Ý][A-Za-zÀ-ÿ' ]{2,40}(?:/[A-Z]{2})?)")
 PAIS = re.compile(r"^(?:o\s+)?(?:brasil|brazil)\b", re.I)
+PROVA_DE_EXPERIENCIA = re.compile(r"experi[eê]ncia|demonstrad|comprov|registro|tempo de|per[ií]odo", re.I)
+# Certificações que costumam ser eliminatórias (nome interno -> padrão)
+CERTIFICACOES = {
+    "itil": r"itil", "cissp": r"cissp", "cism": r"cism", "cisa": r"(?<![a-z])cisa(?![a-z])", "ceh": r"(?<![a-z])ceh(?![a-z])",
+    "oscp": r"oscp", "security+": r"security\+", "cysa+": r"cysa\+", "ecsa": r"ecsa", "ecih": r"ecih", "csih": r"csih",
+    "ccna": r"ccna", "ccnp": r"ccnp", "aws certified": r"aws certified|aws solutions architect|cloud practitioner",
+    "az-900": r"az-?900|az-?104", "pmp": r"(?<![a-z])pmp(?![a-z])", "cobit": r"cobit",
+}
 PLANTAO = re.compile(
     r"(?<![a-z])(?:plant[aã]o|sobreaviso|on-?call|12x36|escala|turnos?|24/7|24x7)(?![a-z])|finais? de semana|fins de semana", re.I)
 
@@ -44,6 +52,7 @@ class Ficha:
     residencia: str = ""                 # cidade exigida, se houver
     plantao: bool = False
     prazo: str = ""                      # AAAA-MM-DD
+    certificacoes: list[str] = field(default_factory=list)  # certificações EXIGIDAS (não as "diferencial")
 
 
 def idioma_do_texto(texto: str) -> str:
@@ -81,6 +90,23 @@ def _ingles(texto: str, idioma: str) -> str:
     return "provável" if idioma == "en" else "nenhum"
 
 
+def _contrato(texto: str) -> str:
+    """CLT, PJ, CLT/PJ ou n/d. Ignora "experiência comprovada por contrato PJ ou carteira", que não é o regime da vaga."""
+    def vale(rx: re.Pattern) -> bool:
+        return any(not PROVA_DE_EXPERIENCIA.search(re.split(r"[.;\n]", texto[:m.start()])[-1]) for m in rx.finditer(texto))
+    pj, clt = vale(PJ), vale(CLT)
+    return "CLT/PJ" if pj and clt else "PJ" if pj else "CLT" if clt else "n/d"
+
+
+def _certificacoes(texto: str) -> list[str]:
+    achadas = []
+    for nome, padrao in CERTIFICACOES.items():
+        contextos = {contexto(texto, m.start()) for m in re.finditer(padrao, texto, re.I)}
+        if "obrigatorio" in contextos:
+            achadas.append(nome)
+    return achadas
+
+
 def _residencia(texto: str) -> str:
     m = RESIDENCIA.search(texto)
     if not m:
@@ -95,7 +121,6 @@ def analisar(texto: str, lacunas: list[str], *, remote_proof: bool = False, praz
         return Ficha(lida=False, remoto="confirmado" if remote_proof else "a confirmar", prazo=prazo)
     idioma = idioma_do_texto(texto)
     obrigatorias, desejaveis = _cloud(texto, lacunas)
-    pj, clt = bool(PJ.search(texto)), bool(CLT.search(texto))
     return Ficha(
         remoto="confirmado" if remote_proof or verify.is_remote_text(texto) else "a confirmar",
         cita_presencial=bool(verify.ONSITE_TEXT.search(texto)),
@@ -103,7 +128,8 @@ def analisar(texto: str, lacunas: list[str], *, remote_proof: bool = False, praz
         cloud_desejavel=desejaveis,
         ingles=_ingles(texto, idioma),
         idioma=idioma,
-        contrato="CLT/PJ" if pj and clt else "PJ" if pj else "CLT" if clt else "n/d",
+        contrato=_contrato(texto),
+        certificacoes=_certificacoes(texto),
         residencia=_residencia(texto),
         plantao=bool(PLANTAO.search(texto)),
         prazo=prazo,

@@ -115,6 +115,10 @@ def pontuar(job: Job, perfil: Perfil, texto: str = "", ficha: Ficha | None = Non
         for termo in ficha.cloud[:3]:
             pontos -= 12
             motivos.append(f"exige {termo}")
+        faltam = [c for c in ficha.certificacoes if c not in perfil.certificacoes]
+        for cert in faltam[:2]:
+            pontos -= 8
+            motivos.append(f"exige certificação {cert}")
         if ficha.residencia:
             pontos -= 50
             motivos.append(f"residir em {ficha.residencia}")

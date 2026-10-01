@@ -89,3 +89,11 @@ def test_area_de_interesse_no_titulo_pesa_mesmo_sem_habilidade_no_titulo():
 def test_nivel_pleno_ou_senior_ganha_pequeno_bonus():
     sem, com = job("Analista de Redes BGP", url="n1"), job("Analista de Redes BGP Sênior", url="n2")
     assert pontuar(com, PERFIL, hoje=HOJE).pontos - pontuar(sem, PERFIL, hoje=HOJE).pontos == 4
+
+
+def test_certificacao_exigida_que_falta_perde_pontos_e_a_que_tem_nao():
+    tem = Perfil({"bgp": 5}, [], {}, "?", 10, certificacoes=["itil"])
+    f = Ficha(remoto="confirmado", certificacoes=["itil", "cysa+", "ecsa", "cissp"])
+    p = pontuar(job(), tem, ficha=f, hoje=HOJE)
+    assert p.motivos == ["exige certificação cysa+", "exige certificação ecsa"]  # a que tem não conta; teto de 2
+    assert pontuar(job(), tem, ficha=NEUTRA, hoje=HOJE).pontos - p.pontos == 16
