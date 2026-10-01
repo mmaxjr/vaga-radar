@@ -46,3 +46,20 @@ def test_sugere_curriculo_pelo_primeiro_padrao_que_casar(tmp_path):
     assert perfil.curriculo("Analista de Segurança Purple Team") == "Cybersecurity"
     assert perfil.curriculo("Analista de Redes BGP") == "Analista-de-Redes"
     assert perfil.curriculo("Designer de produto") == "Curriculo-Completo"
+
+
+def test_evitar_e_carregado_do_toml(tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text('[habilidades]\nlinux = 5\n[evitar]\ntermos = ["kernel"]\n', encoding="utf-8")
+    perfil = Perfil.carregar(p)
+    assert perfil.fora_do_perfil("Ubuntu Kernel Engineer") == ["kernel"]
+    assert perfil.fora_do_perfil("Analista Linux") == []
+
+
+def test_interesses_somam_os_pesos_das_palavras_do_titulo(tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text('[habilidades]\nlinux = 5\n[interesses]\nredes = 5\nsuporte = 3\n"segurança" = 4\n', encoding="utf-8")
+    perfil = Perfil.carregar(p)
+    assert perfil.interesse("Analista de Suporte de Redes") == 8
+    assert perfil.interesse("Analista de Segurança") == 4
+    assert perfil.interesse("Designer") == 0

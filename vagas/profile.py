@@ -12,6 +12,13 @@ Exemplo de perfil.toml:
     [lacunas]
     termos = ["aws", "kubernetes"]   # o que você ainda NÃO tem; vaga que exige isso perde pontos
 
+    [interesses]               # palavras de título da área que você quer (peso 1 a 5): valem já na 1ª peneira
+    redes = 5
+    suporte = 3
+
+    [evitar]                   # cargos que casam por palavra mas estão fora do seu perfil: perdem pontos
+    termos = ["kernel", "firmware"]
+
     [curriculos]               # regex = nome do currículo; vale o primeiro que casar
     padrao = "Curriculo-Completo"
     "redes|network" = "Analista-de-Redes"
@@ -35,6 +42,8 @@ class Perfil:
     curriculos: dict[str, str] = field(default_factory=dict)
     ingles: str = "?"
     referencia: int = 30
+    evitar: list[str] = field(default_factory=list)  # termos de cargos fora do perfil (ex.: kernel, firmware)
+    interesses: dict[str, int] = field(default_factory=dict)  # palavras de TÍTULO que indicam a área que você procura
 
     @classmethod
     def carregar(cls, caminho: str | Path) -> "Perfil":
@@ -46,6 +55,8 @@ class Perfil:
             curriculos=dict(dados.get("curriculos", {})),
             ingles=meta.get("ingles", "?"),
             referencia=int(meta.get("referencia", 30)),
+            evitar=list(dados.get("evitar", {}).get("termos", [])),
+            interesses={k: int(v) for k, v in dados.get("interesses", {}).items()},
         )
 
     def encaixe(self, texto: str) -> tuple[int, list[str]]:
@@ -53,6 +64,13 @@ class Perfil:
         cobertas = {h: p for h, p in self.habilidades.items() if _tem(texto, h)}
         pontos = sum(cobertas.values())
         return min(100, round(100 * pontos / self.referencia)), sorted(cobertas, key=lambda h: -cobertas[h])
+
+    def interesse(self, titulo: str) -> int:
+        """Soma dos pesos das áreas de interesse presentes no título."""
+        return sum(p for termo, p in self.interesses.items() if _tem(titulo, termo))
+
+    def fora_do_perfil(self, titulo: str) -> list[str]:
+        return [t for t in self.evitar if _tem(titulo, t)]
 
     def curriculo(self, texto: str) -> str:
         for padrao, nome in self.curriculos.items():

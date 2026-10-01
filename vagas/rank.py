@@ -79,7 +79,7 @@ def _frescor(dias: int) -> float:
 def pontuar(job: Job, perfil: Perfil, texto: str = "", ficha: Ficha | None = None, hoje: date | None = None) -> Pontuacao:
     hoje = hoje or datetime.now(BRT).date()
     encaixe, cobre = perfil.encaixe(f"{job.title} {texto}")
-    pontos, motivos = encaixe * 0.6, []
+    pontos, motivos = encaixe * 0.6 + min(20, 2 * perfil.interesse(job.title)), []  # área de interesse vale até 20
     dias, datada = idade_dias(job, hoje)
     pontos += _frescor(dias) * (1 if datada else 0.5)
     titulo = _ascii(job.title)
@@ -89,10 +89,27 @@ def pontuar(job: Job, perfil: Perfil, texto: str = "", ficha: Ficha | None = Non
     elif re.search(r"junior|(?<![a-z])jr(?![a-z])", titulo):
         pontos -= 25
         motivos.append("nível júnior")
-    elif re.search(r"principal|staff|head of|diretor|director|(?<![a-z])vp(?![a-z])", titulo):
+    elif re.search(r"principal|staff|head of|diretor|director|(?<![a-z])lead(?![a-z])|(?<![a-z])vp(?![a-z])", titulo):
         pontos -= 8
         motivos.append("nível muito sênior")
+    if re.search(r"banco de talentos|cadastro reserva|talent pool", titulo):
+        pontos -= 30
+        motivos.append("banco de talentos (não é vaga aberta)")
+    if re.search(r"pleno|senior|(?<![a-z])(pl|sr|ii|iii)(?![a-z])", titulo):
+        pontos += 4  # nível compatível com o de quem procura
+    if job.scope == "remoto" and re.search(r"presencial|hibrid|hybrid|on-?site", titulo):
+        pontos -= 40
+        motivos.append("o título diz presencial/híbrido")
+    for termo in perfil.fora_do_perfil(titulo):
+        pontos -= 12
+        motivos.append(f"fora do seu perfil ({termo})")
     if ficha is not None:
+        if job.scope == "remoto" and ficha.remoto != "confirmado":
+            pontos -= 45
+            motivos.append("regime remoto não confirmado")
+        if job.scope == "remoto" and ficha.cita_presencial:
+            pontos -= 10
+            motivos.append("o texto cita presencial/híbrido")
         if ficha.idioma == "pt":
             pontos += 5
         for termo in ficha.cloud[:3]:
