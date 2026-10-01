@@ -12,7 +12,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from .describe import Descricoes
-from .ficha import Ficha, analisar
+from .ficha import Ficha, analisar, idioma_do_texto
 from .models import Job
 from .profile import Perfil
 from .rank import BRT, Pontuacao, dedupe, empresa_chave, limitar_por_empresa, pontuar
@@ -33,8 +33,13 @@ def _nao_confirmada(it: "Item") -> bool:
     return it.job.scope == "remoto" and it.ficha.remoto != "confirmado"
 
 
+def idioma_do_item(it: "Item") -> str:
+    """Idioma da vaga: o da descrição, quando lida; senão o do título."""
+    return it.ficha.idioma if it.ficha.lida else idioma_do_texto(it.job.title)
+
+
 def montar(jobs: list[Job], perfil: Perfil, descricoes: Descricoes, n: int = 10, pool: int = 40,
-           hoje: date | None = None, por_empresa: int = 2) -> tuple[list[Item], dict[str, list[Item]]]:
+           hoje: date | None = None, por_empresa: int = 2, idioma: str = "todos") -> tuple[list[Item], dict[str, list[Item]]]:
     hoje = hoje or datetime.now(BRT).date()
     pre = sorted(dedupe(jobs), key=lambda j: pontuar(j, perfil, hoje=hoje).pontos, reverse=True)
     pre, cortadas = limitar_por_empresa(pre, empresa_chave, pool, por_empresa=PRE_POR_EMPRESA)  # a peneira não deixa uma empresa ocupar tudo
@@ -45,10 +50,13 @@ def montar(jobs: list[Job], perfil: Perfil, descricoes: Descricoes, n: int = 10,
         ficha = analisar(texto, perfil.lacunas, remote_proof=garantido, prazo=prazo, lida=achado is not None)
         return Item(job, ficha, pontuar(job, perfil, texto, ficha, hoje))
 
+    def do_idioma(it: Item) -> bool:
+        return idioma == "todos" or idioma_do_item(it) == idioma
+
     itens = sorted((item(job, descricoes.obter(job)) for job in pre), key=lambda it: (_nao_confirmada(it), -it.pont.pontos))
-    top, resto = limitar_por_empresa(itens, lambda it: empresa_chave(it.job), n, por_empresa)
+    top, resto = limitar_por_empresa([it for it in itens if do_idioma(it)], lambda it: empresa_chave(it.job), n, por_empresa)
     for empresa, jobs_cortadas in cortadas.items():  # entram no resumo só pelo título (sem ler a descrição)
-        resto.setdefault(empresa, []).extend(item(job, None) for job in jobs_cortadas)
+        resto.setdefault(empresa, []).extend(it for it in (item(job, None) for job in jobs_cortadas) if do_idioma(it))
     for lista in resto.values():
         lista.sort(key=lambda it: it.pont.pontos, reverse=True)
     return top, resto
@@ -73,7 +81,7 @@ def formatar(top: list[Item], resto: dict[str, list[Item]], perfil: Perfil, hoje
         if _nao_confirmada(it) and not aviso:
             aviso = True
             linhas.append("--- regime remoto NÃO confirmado: confira o anúncio antes de se candidatar ---\n")
-        linhas.append(f"#{i:<2} {j.title.strip()[:78]} | {j.company[:26] or 'empresa n/d'} | {j.source.split(':')[0]} | {_data(j)}")
+        linhas.append(f"#{i:<2} [{idioma_do_item(it).upper()}] {j.title.strip()[:74]} | {j.company[:26] or 'empresa n/d'} | {j.source.split(':')[0]} | {_data(j)}")
         linhas.append(f"    {j.url}")
         if not f.lida:
             linhas.append(f"    Encaixe {p.encaixe}% | descrição não lida (abra a vaga para ver os requisitos)")
@@ -119,17 +127,26 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--pool", type=int, default=60, help="quantas candidatas têm a descrição lida")
     ap.add_argument("--orcamento", type=int, default=60, help="máximo de requisições de descrição por execução")
     ap.add_argument("--escopo", choices=["remoto", "local", "todos"], default="remoto")
+    ap.add_argument("--idioma", choices=["pt", "en", "todos"], default="todos",
+                    help="idioma da vaga; 'todos' mostra uma lista em português e outra em inglês")
+    ap.add_argument("--desde", default="", help="só vagas vistas pela 1ª vez depois deste instante (ISO 8601, UTC)")
     ap.add_argument("--hoje", action="store_true", help="só vagas publicadas (ou vistas pela 1ª vez) hoje")
     args = ap.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     hoje = datetime.now(BRT).date()
     jobs = [Job.from_dict(d) for d in json.loads(Path(args.jobs).read_text(encoding="utf-8"))["jobs"]]
     jobs = _filtrar(jobs, args.escopo, args.hoje, hoje)
+    if args.desde:
+        jobs = [j for j in jobs if j.first_seen > args.desde]
     perfil = Perfil.carregar(args.profile)
     descricoes = Descricoes(args.cache, orcamento=args.orcamento)
-    itens, resto = montar(jobs, perfil, descricoes, n=args.n, pool=args.pool, hoje=hoje)
-    print(f"Top {len(itens)} de {len(jobs)} vagas ({hoje:%d/%m/%Y})\n")
-    print(formatar(itens, resto, perfil, hoje))
+    idiomas = [("pt", "EM PORTUGUÊS"), ("en", "EM INGLÊS")] if args.idioma == "todos" else [(args.idioma, "")]
+    print(f"{len(jobs)} vagas consideradas ({hoje:%d/%m/%Y})\n")
+    for codigo, titulo in idiomas:
+        itens, resto = montar(jobs, perfil, descricoes, n=args.n, pool=args.pool, hoje=hoje, idioma=codigo)
+        if titulo:
+            print(f"========== {titulo}: Top {len(itens)} ==========\n")
+        print(formatar(itens, resto, perfil, hoje))
     return 0
 
 

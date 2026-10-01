@@ -93,3 +93,42 @@ def test_banco_de_talentos_perde_pontos():
     p = pontuar(talentos, PERFIL, hoje=HOJE)
     assert "banco de talentos (não é vaga aberta)" in p.motivos
     assert pontuar(normal, PERFIL, hoje=HOJE).pontos - p.pontos == 30
+
+
+def test_filtra_por_idioma_e_marca_o_idioma_na_ficha():
+    pt = j("Analista BGP", "A", "p1")
+    en = j("Senior Network Engineer", "B", "e1")
+    textos = {"p1": "Experiência com BGP para atuar em projetos de redes e infraestrutura.",
+              "e1": "You will work with the team on BGP and we are hiring for the role."}
+    todos, _ = montar([pt, en], PERFIL, FakeDescricoes(textos), n=5, hoje=HOJE)
+    assert {i.job.url for i in todos} == {"p1", "e1"}
+    so_pt, _ = montar([pt, en], PERFIL, FakeDescricoes(textos), n=5, hoje=HOJE, idioma="pt")
+    so_en, resto_en = montar([pt, en], PERFIL, FakeDescricoes(textos), n=5, hoje=HOJE, idioma="en")
+    assert [i.job.url for i in so_pt] == ["p1"] and [i.job.url for i in so_en] == ["e1"]
+    assert "[EN]" in formatar(so_en, resto_en, PERFIL, hoje=HOJE) and "[PT]" in formatar(so_pt, {}, PERFIL, hoje=HOJE)
+
+
+def test_vaga_sem_descricao_usa_o_idioma_do_titulo():
+    sem_texto, _ = montar([j("Engenheiro de Dados Pleno", "A", "x1")], PERFIL, FakeDescricoes({}), n=5, hoje=HOJE, idioma="pt")
+    assert [i.job.url for i in sem_texto] == ["x1"]
+    assert montar([j("Engenheiro de Dados Pleno", "A", "x1")], PERFIL, FakeDescricoes({}), n=5, hoje=HOJE, idioma="en")[0] == []
+
+
+def test_main_separa_portugues_e_ingles(tmp_path, monkeypatch, capsys):
+    historico = tmp_path / "jobs.json"
+    pt = j("Analista BGP", "ACME", "https://x/pt", posted="2026-10-01")
+    en = j("Senior Network Engineer", "Beta", "https://x/en", posted="2026-10-01")
+    historico.write_text(json.dumps({"jobs": [pt.to_dict(), en.to_dict()]}), encoding="utf-8")
+    perfil = tmp_path / "perfil.toml"
+    perfil.write_text('[perfil]\nreferencia = 10\n[habilidades]\nbgp = 5\n', encoding="utf-8")
+    textos = {"https://x/pt": "Experiência com BGP para atuar em projetos de redes.",
+              "https://x/en": "You will work with the team on BGP and we are hiring for the role."}
+    monkeypatch.setattr(top, "Descricoes", lambda *a, **k: FakeDescricoes(textos))
+    assert main(["--jobs", str(historico), "--profile", str(perfil), "--cache", str(tmp_path / "c.json")]) == 0
+    saida = capsys.readouterr().out
+    assert saida.index("EM PORTUGUÊS") < saida.index("Analista BGP") < saida.index("EM INGLÊS") < saida.index("Senior Network Engineer")
+    main(["--jobs", str(historico), "--profile", str(perfil), "--cache", str(tmp_path / "c.json"), "--idioma", "en"])
+    so_en = capsys.readouterr().out
+    assert "Senior Network Engineer" in so_en and "Analista BGP" not in so_en
+    main(["--jobs", str(historico), "--profile", str(perfil), "--cache", str(tmp_path / "c.json"), "--desde", "2999-01-01T00:00:00+00:00"])
+    assert "0 vagas consideradas" in capsys.readouterr().out
