@@ -78,6 +78,14 @@ Dica de regex: para casar só a palavra inteira use `(?<![a-z])go(?![a-z])` (evi
 3. **Região** (vagas internacionais): só abertas ao Brasil, LATAM ou "anywhere".
 4. **Idade** (`max_age_days`).
 
+## Top do dia
+
+`python -m vagas.top --jobs docs/jobs.json --profile perfil.toml --cache descricoes.json` pega o histórico, tira as duplicadas entre
+fontes, pontua cada vaga pelo seu perfil e pelo frescor, lê a descrição das melhores e imprime uma ficha por vaga: encaixe %,
+o que você cobre, o que falta (ex.: cloud exigido x só diferencial), regime, contrato (CLT/PJ), inglês, residência, plantão e prazo.
+No máximo 2 vagas por empresa; o resto vira uma linha ("Canonical: 84 outras..."). Veja o formato do `perfil.toml` no topo de
+[vagas/profile.py](vagas/profile.py). O perfil é um arquivo local: não o publique.
+
 ## Vagas na sua cidade
 
 Além das remotas, dá para incluir vagas da **sua cidade em qualquer regime** (presencial, híbrido ou remoto).
