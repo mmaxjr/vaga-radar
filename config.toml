@@ -120,3 +120,4 @@ max_items = 60
 [storage]
 path = "docs/jobs.json"
 keep_days = 45
+# min_hours = 6   # descomente para pular a coleta se a última foi há menos de 6 h (evita HTTP 429)

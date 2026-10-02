@@ -42,7 +42,13 @@ pip install -r requirements.txt
 python -m vagas --dry-run              # mostra o que há de novo, sem salvar nem enviar
 python -m vagas                        # coleta, salva em docs/jobs.json e gera docs/index.html
 python -m vagas --sources gupy,github  # só algumas fontes
+python -m vagas --min-hours 6          # pula a coleta se a última foi há menos de 6 h
+python -m vagas --min-hours 6 --force  # coleta mesmo assim
 ```
+
+**Evite coletar toda hora.** Uma coleta completa faz centenas de requisições (só o LinkedIn passa de 100 por rodada) e as
+fontes respondem HTTP 429 (limite de acessos) quando há excesso, às vezes por horas. Vagas novas surgem em poucos lotes por
+dia, então 1 a 2 coletas já bastam. Para travar isso de vez, ponha `min_hours = 6` em `[storage]` no `config.toml`.
 
 Abra `docs/index.html` no navegador para ver e filtrar as vagas. Os dados coletados ficam só na sua máquina
 (`docs/jobs.json` e `docs/index.html` estão no `.gitignore`).
@@ -83,7 +89,9 @@ Dica de regex: para casar só a palavra inteira use `(?<![a-z])go(?![a-z])` (evi
 `python -m vagas.top --jobs docs/jobs.json --profile perfil.toml --cache descricoes.json` pega o histórico, tira as duplicadas entre
 fontes, pontua cada vaga pelo seu perfil e pelo frescor, lê a descrição das melhores e imprime uma ficha por vaga: encaixe %,
 o que você cobre, o que falta (ex.: cloud exigido x só diferencial), regime, contrato (CLT/PJ), inglês, residência, plantão e prazo.
-No máximo 2 vagas por empresa; o resto vira uma linha ("Canonical: 84 outras..."). Veja o formato do `perfil.toml` no topo de
+No máximo 2 vagas por empresa; o resto vira uma linha ("Canonical: 84 outras..."). Por padrão mostra uma lista em português e
+outra em inglês (`--idioma pt|en|todos`); `--desde <instante ISO>` limita às vagas vistas pela primeira vez depois dele e `--hoje`
+só às de hoje. Veja o formato do `perfil.toml` no topo de
 [vagas/profile.py](vagas/profile.py). O perfil é um arquivo local: não o publique.
 
 ## Vagas na sua cidade

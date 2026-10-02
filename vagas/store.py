@@ -15,12 +15,20 @@ class Store:
         self.keep_days = keep_days
         self.jobs: dict[str, Job] = {}
         self.rejected: dict[str, str] = {}  # id -> data em que foi descartada (para não reverificar todo dia)
+        self.updated = ""  # instante (ISO, UTC) da última coleta salva
         if self.path.exists():
             data = json.loads(self.path.read_text(encoding="utf-8"))
+            self.updated = data.get("updated", "")
             for d in data.get("jobs", []):
                 job = Job.from_dict(d)
                 self.jobs[job.id] = job
             self.rejected = data.get("rejected", {})
+
+    def hours_since_last_run(self) -> float | None:
+        """Horas desde a última coleta salva, ou None se nunca houve."""
+        if not self.updated:
+            return None
+        return (datetime.now(timezone.utc) - datetime.fromisoformat(self.updated)).total_seconds() / 3600
 
     def is_known(self, job: Job) -> bool:
         return job.id in self.jobs or job.id in self.rejected

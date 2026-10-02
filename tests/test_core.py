@@ -1,3 +1,4 @@
+import json
 import tomllib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -60,6 +61,31 @@ def test_store_deduplica_e_persiste(tmp_path):
     store.save()
     assert store.add_new([job("A dev")]) == []
     assert len(Store(path).jobs) == 1
+
+
+def test_store_sabe_ha_quantas_horas_foi_a_ultima_coleta(tmp_path):
+    path = tmp_path / "jobs.json"
+    assert Store(path).hours_since_last_run() is None  # nunca coletou
+    Store(path).save()
+    assert Store(path).hours_since_last_run() < 0.1
+    antigo = (datetime.now(timezone.utc) - timedelta(hours=7)).isoformat(timespec="seconds")
+    path.write_text(json.dumps({"updated": antigo, "jobs": []}), encoding="utf-8")
+    assert 6.9 < Store(path).hours_since_last_run() < 7.1
+
+
+def test_coleta_recente_e_pulada_a_menos_que_se_force(tmp_path, monkeypatch):
+    from vagas import __main__ as cli
+    cfg = tmp_path / "c.toml"
+    cfg.write_text(f'[search]\ninclude = ["dev"]\n[storage]\npath ="{(tmp_path / "jobs.json").as_posix()}"\n', encoding="utf-8")
+    Store(tmp_path / "jobs.json").save()
+    chamadas = []
+    monkeypatch.setattr(cli, "collect", lambda c, n: chamadas.append(n) or [])
+    assert cli.main(["--config", str(cfg), "--no-notify", "--min-hours", "6"]) == 0
+    assert chamadas == []  # pulou: a última coleta foi agora
+    assert cli.main(["--config", str(cfg), "--no-notify", "--min-hours", "6", "--force"]) == 0
+    assert len(chamadas) == 1
+    assert cli.main(["--config", str(cfg), "--no-notify"]) == 0  # sem trava, coleta normalmente
+    assert len(chamadas) == 2
 
 
 def test_digest_respeita_limite_do_telegram_e_escapa_html():

@@ -43,6 +43,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-notify", action="store_true", help="salva mas não envia para o Telegram")
     ap.add_argument("--hide-sources", default="",
                     help="fontes (separadas por vírgula) que ficam fora da página HTML, ex.: linkedin")
+    ap.add_argument("--min-hours", type=float, default=None,
+                    help="não coleta se a última coleta foi há menos que isso (evita bloqueio por excesso de requisições). "
+                         "Padrão: [storage] min_hours do config, ou 0")
+    ap.add_argument("--force", action="store_true", help="ignora o intervalo mínimo entre coletas")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
 
@@ -58,6 +62,11 @@ def main(argv: list[str] | None = None) -> int:
 
     flt = JobFilter(cfg)
     store = Store(cfg["storage"]["path"], cfg["storage"].get("keep_days", 45))
+    min_hours = args.min_hours if args.min_hours is not None else cfg["storage"].get("min_hours", 0)
+    since = store.hours_since_last_run()
+    if not args.force and not args.dry_run and min_hours and since is not None and since < min_hours:
+        log.info("última coleta há %.1f h (mínimo %.1f h): nada a fazer. Use --force para coletar mesmo assim.", since, min_hours)
+        return 0
     found = list({j.id: j for j in collect(cfg, names)}.values())  # a mesma vaga pode vir por mais de um termo
     kept = [j for j in found if flt.accepts(j)]
 
