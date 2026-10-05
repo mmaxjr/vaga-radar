@@ -74,6 +74,10 @@ pages_per_term = 2
 days = 7
 # Pausa entre requisições (segundos) para não tomar bloqueio
 delay = 2.5
+# Só coleta o LinkedIn de novo depois destas horas (ele dá HTTP 429 com excesso de pedidos). `--force` ignora.
+# Vale para qualquer fonte: crie a seção [nome-da-fonte] com min_hours (ex.: [vagascombr]).
+min_hours = 6
+# terms = ["analista de redes", "python"]   # lista própria do LinkedIn, mais curta que [search] terms
 
 [local]
 # Vagas na SUA cidade, em qualquer regime (presencial, híbrido ou remoto). Saem separadas das remotas.

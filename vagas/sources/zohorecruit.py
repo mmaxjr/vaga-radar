@@ -28,7 +28,7 @@ def fetch(cfg: dict) -> list[Job]:
     cities = _cities(cfg)
     jobs: list[Job] = []
     for site in cfg.get("zohorecruit", {}).get("sites", []):
-        r = http.get(LISTING.format(site=site))
+        r = http.get(LISTING.format(site=site), timeout=45)  # o servidor da Zoho às vezes demora mais de 25 s
         if r is not None:
             jobs += parse(http.decode(r), site, cities)
     return jobs

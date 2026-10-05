@@ -50,6 +50,13 @@ python -m vagas --min-hours 6 --force  # coleta mesmo assim
 fontes respondem HTTP 429 (limite de acessos) quando há excesso, às vezes por horas. Vagas novas surgem em poucos lotes por
 dia, então 1 a 2 coletas já bastam. Para travar isso de vez, ponha `min_hours = 6` em `[storage]` no `config.toml`.
 
+O que o projeto já faz para não ser bloqueado:
+- **Intervalo por fonte:** `min_hours` na seção de cada fonte (o `config.toml` já traz `[linkedin] min_hours = 6`). As fontes
+  de API seguem livres. Cada tentativa fica registrada no `jobs.json` (`source_runs`).
+- **Disjuntor:** depois de um HTTP 429, o site não recebe mais pedidos até o fim da execução.
+- **Resumo no fim:** quais fontes vieram vazias, quais foram puladas pelo intervalo e quais deram 429.
+- **Dados estruturados:** Jobicy e Vagas.com.br têm a descrição lida pelo `JobPosting` (schema.org) da página, que muda menos que o HTML.
+
 Abra `docs/index.html` no navegador para ver e filtrar as vagas. Os dados coletados ficam só na sua máquina
 (`docs/jobs.json` e `docs/index.html` estão no `.gitignore`).
 

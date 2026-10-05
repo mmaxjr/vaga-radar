@@ -1,7 +1,8 @@
 """Texto da descrição de cada vaga, por fonte, com cache em disco e orçamento de requisições.
 
-Fontes sem leitura: GeekHunter (robots.txt proíbe /jobs/...), Jobicy e Zoho (a API não busca por vaga), RemoteOK,
-Remotive e We Work Remotely (já vêm em inglês e curtas). Nelas a vaga entra no ranking só pelo título.
+Jobicy e Vagas.com.br: lidos pelo JSON-LD `JobPosting` da página. Fontes sem leitura: GeekHunter (robots.txt proíbe
+/jobs/...), Zoho (a API não busca por vaga), RemoteOK, Remotive e We Work Remotely (já vêm em inglês e curtas).
+Nelas a vaga entra no ranking só pelo título.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from typing import Callable
 
 from bs4 import BeautifulSoup
 
-from . import http
+from . import http, jsonld
 from .models import Job
 from .sources import gupy, himalayas, linkedin
 
@@ -69,6 +70,15 @@ def _pagina(job: Job) -> Resultado | None:
     return (_texto(http.decode(r)), "") if r is not None else None
 
 
+def _jsonld(job: Job) -> Resultado | None:
+    """Páginas que publicam `JobPosting` (Jobicy, Vagas.com.br): lê a descrição e a validade desses dados."""
+    r = http.get(job.url)
+    vaga = jsonld.job_posting(http.decode(r)) if r is not None else None
+    if not vaga or not vaga.get("description"):
+        return None
+    return _texto(html.unescape(vaga["description"])), (vaga.get("validThrough") or "")[:10]
+
+
 def _empresa(job: Job) -> Resultado | None:
     slug, vaga = job.source.split(":", 1)[1], job.url.rstrip("/").split("/")[-1]
     r = http.get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{vaga}")  # Lever não tem esta rota: None
@@ -77,7 +87,7 @@ def _empresa(job: Job) -> Resultado | None:
 
 FETCHERS: dict[str, Callable[[Job], Resultado | None]] = {
     "gupy": _gupy, "himalayas": _himalayas, "linkedin": _linkedin, "github": _github,
-    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa,
+    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld,
 }
 
 

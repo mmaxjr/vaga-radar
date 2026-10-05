@@ -18,7 +18,7 @@ API = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 def fetch(cfg: dict) -> list[Job]:
     li = cfg["linkedin"]
     jobs: list[Job] = []
-    for term in cfg["search"]["terms"]:
+    for term in li.get("terms", cfg["search"]["terms"]):  # [linkedin] terms: lista mais curta, para pedir menos
         for page in range(li.get("pages_per_term", 2)):
             r = http.get(API, params={
                 "keywords": term,

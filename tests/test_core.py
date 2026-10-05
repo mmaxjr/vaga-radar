@@ -79,7 +79,7 @@ def test_coleta_recente_e_pulada_a_menos_que_se_force(tmp_path, monkeypatch):
     cfg.write_text(f'[search]\ninclude = ["dev"]\n[storage]\npath ="{(tmp_path / "jobs.json").as_posix()}"\n', encoding="utf-8")
     Store(tmp_path / "jobs.json").save()
     chamadas = []
-    monkeypatch.setattr(cli, "collect", lambda c, n: chamadas.append(n) or [])
+    monkeypatch.setattr(cli, "collect", lambda c, n: chamadas.append(n) or {x: [] for x in n})
     assert cli.main(["--config", str(cfg), "--no-notify", "--min-hours", "6"]) == 0
     assert chamadas == []  # pulou: a última coleta foi agora
     assert cli.main(["--config", str(cfg), "--no-notify", "--min-hours", "6", "--force"]) == 0
