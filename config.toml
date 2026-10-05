@@ -112,6 +112,9 @@ queries = ["devops", "sre", "infrastructure", "security", "network engineer", "l
 pages_per_term = 2
 delay = 1.5
 
+[nerdin]
+pages = 5          # ~20 vagas por página, das mais novas para as mais antigas
+
 [verify]
 # Lê a descrição das vagas do LinkedIn que não dizem "remoto" no título, para confirmar o regime
 max_per_run = 60

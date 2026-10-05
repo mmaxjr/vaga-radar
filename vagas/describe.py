@@ -1,6 +1,6 @@
 """Texto da descrição de cada vaga, por fonte, com cache em disco e orçamento de requisições.
 
-Jobicy e Vagas.com.br: lidos pelo JSON-LD `JobPosting` da página. Fontes sem leitura: GeekHunter (robots.txt proíbe
+Jobicy, Vagas.com.br e Nerdin: lidos pelo JSON-LD `JobPosting` da página. Fontes sem leitura: GeekHunter (robots.txt proíbe
 /jobs/...), Zoho (a API não busca por vaga), RemoteOK, Remotive e We Work Remotely (já vêm em inglês e curtas).
 Nelas a vaga entra no ranking só pelo título.
 """
@@ -87,7 +87,7 @@ def _empresa(job: Job) -> Resultado | None:
 
 FETCHERS: dict[str, Callable[[Job], Resultado | None]] = {
     "gupy": _gupy, "himalayas": _himalayas, "linkedin": _linkedin, "github": _github,
-    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld,
+    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld,
 }
 
 
