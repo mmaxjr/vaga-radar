@@ -87,7 +87,7 @@ def _empresa(job: Job) -> Resultado | None:
 
 FETCHERS: dict[str, Callable[[Job], Resultado | None]] = {
     "gupy": _gupy, "himalayas": _himalayas, "linkedin": _linkedin, "github": _github,
-    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld,
+    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld, "coodesh": _pagina,
 }
 
 

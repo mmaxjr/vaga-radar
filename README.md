@@ -26,6 +26,8 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 | Empregare | Brasil | HTML das listagens (remoto, por termo e por cidade); o cartão informa o regime, então só entra o que diz "Totalmente Remoto" |
 | Páginas de carreira do Zoho Recruit (ex.: Spassu) | Brasil | a listagem pública já traz todas as vagas com o campo "Trabalho remoto"; lista de empresas em `[zohorecruit]` |
 | [Nerdin](https://www.nerdin.com.br) | Brasil | HTML da listagem (mais novas primeiro, `[nerdin] pages`); o cartão informa o regime, então só entra o que diz "Home Office"; a descrição vem do `JobPosting` da página |
+| [Trampos.co](https://trampos.co) | Brasil | API JSON do próprio site (mais comunicação que TI); só categorias TI/dados com home office |
+| [Coodesh](https://coodesh.com) | Brasil | sitemap oficial de vagas, uma página por vaga; só localidade "Remota" (as vagas costumam ser antigas e caem no filtro de idade) |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |
@@ -94,7 +96,7 @@ Dica de regex: para casar só a palavra inteira use `(?<![a-z])go(?![a-z])` (evi
 
 ## Top do dia
 
-`python -m vagas.top --jobs docs/jobs.json --profile perfil.toml --cache descricoes.json` pega o histórico, tira as duplicadas entre
+`python -m vagas.top --jobs docs/jobs.json --profile perfil.toml --cache descricoes.json` (com `--grupos`: uma lista por grupo, Maringá, Python, redes/infra/segurança e outras) pega o histórico, tira as duplicadas entre
 fontes, pontua cada vaga pelo seu perfil e pelo frescor, lê a descrição das melhores e imprime uma ficha por vaga: encaixe %,
 o que você cobre, o que falta (ex.: cloud exigido x só diferencial), regime, contrato (CLT/PJ), inglês, residência, plantão e prazo.
 No máximo 2 vagas por empresa; o resto vira uma linha ("Canonical: 84 outras..."). Por padrão mostra uma lista em português e

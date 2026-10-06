@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -60,6 +61,24 @@ def montar(jobs: list[Job], perfil: Perfil, descricoes: Descricoes, n: int = 10,
     for lista in resto.values():
         lista.sort(key=lambda it: it.pont.pontos, reverse=True)
     return top, resto
+
+
+GRUPOS = ["MARINGÁ", "PYTHON / PROGRAMAÇÃO", "REDES, INFRA E SEGURANÇA", "OUTRAS"]
+PROG = re.compile(r"python|back-?end|full-?stack|desenvolv|developer|software|programador|(?<![a-z])dev(?![a-z])", re.I)
+INFRA = re.compile(r"rede|network|infra|segur|secur|cyber|(?<![a-z])(?:noc|sre)(?![a-z])|devops|sysadmin|administrador|suporte|support"
+                   r"|linux|monitor|observab|telecom|sistemas", re.I)
+
+
+def agrupar(jobs: list[Job], perfil: Perfil, descricoes: Descricoes, n: int = 8, pool: int = 40,
+            hoje: date | None = None) -> dict[str, list[Item]]:
+    """Maringá, Python, redes/infra/segurança e o resto, cada grupo ranqueado à parte: nenhum some atrás dos outros."""
+    partes: dict[str, list[Job]] = {nome: [] for nome in GRUPOS}
+    for job in jobs:
+        if job.scope == "local":
+            partes[GRUPOS[0]].append(job)
+        else:
+            partes[next((nome for nome, rx in ((GRUPOS[1], PROG), (GRUPOS[2], INFRA)) if rx.search(job.title)), GRUPOS[3])].append(job)
+    return {nome: montar(js, perfil, descricoes, n=n, pool=pool, hoje=hoje)[0] for nome, js in partes.items()}
 
 
 def _prazo(prazo: str) -> str:
@@ -130,19 +149,26 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--escopo", choices=["remoto", "local", "todos"], default="remoto")
     ap.add_argument("--idioma", choices=["pt", "en", "todos"], default="todos",
                     help="idioma da vaga; 'todos' mostra uma lista em português e outra em inglês")
+    ap.add_argument("--grupos", action="store_true",
+                    help="uma lista por grupo (Maringá, Python, redes/infra/segurança, outras); ignora --escopo e --idioma")
     ap.add_argument("--desde", default="", help="só vagas vistas pela 1ª vez depois deste instante (ISO 8601, UTC)")
     ap.add_argument("--hoje", action="store_true", help="só vagas publicadas (ou vistas pela 1ª vez) hoje")
     args = ap.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     hoje = datetime.now(BRT).date()
     jobs = [Job.from_dict(d) for d in json.loads(Path(args.jobs).read_text(encoding="utf-8"))["jobs"]]
-    jobs = _filtrar(jobs, args.escopo, args.hoje, hoje)
+    jobs = _filtrar(jobs, "todos" if args.grupos else args.escopo, args.hoje, hoje)
     if args.desde:
         jobs = [j for j in jobs if j.first_seen > args.desde]
     perfil = Perfil.carregar(args.profile)
     descricoes = Descricoes(args.cache, orcamento=args.orcamento)
     idiomas = [("pt", "EM PORTUGUÊS"), ("en", "EM INGLÊS")] if args.idioma == "todos" else [(args.idioma, "")]
     print(f"{len(jobs)} vagas consideradas ({hoje:%d/%m/%Y})\n")
+    if args.grupos:
+        for nome, itens in agrupar(jobs, perfil, descricoes, n=args.n, pool=args.pool, hoje=hoje).items():
+            print(f"========== {nome}: {len(itens)} vagas ==========\n")
+            print(formatar(itens, {}, perfil, hoje))
+        return 0
     for codigo, titulo in idiomas:
         itens, resto = montar(jobs, perfil, descricoes, n=args.n, pool=args.pool, hoje=hoje, idioma=codigo)
         if titulo:

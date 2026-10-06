@@ -115,6 +115,12 @@ delay = 1.5
 [nerdin]
 pages = 5          # ~20 vagas por página, das mais novas para as mais antigas
 
+[trampos]
+pages = 5          # 12 vagas por página; o site é mais de comunicação, poucas de TI
+
+[coodesh]
+max_jobs = 40      # páginas de vaga lidas a partir do sitemap (1 requisição cada)
+
 [verify]
 # Lê a descrição das vagas do LinkedIn que não dizem "remoto" no título, para confirmar o regime
 max_per_run = 60
