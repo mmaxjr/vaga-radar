@@ -1,4 +1,4 @@
-"""Vagas direto das empresas, pelas APIs públicas de quadro de vagas (Greenhouse e Lever).
+"""Vagas direto das empresas, pelas APIs públicas de quadro de vagas (Greenhouse, Lever e Ashby).
 
 São as APIs oficiais que as próprias empresas usam nas páginas de carreira: estáveis e sem raspagem de HTML.
 Só entra vaga que se declare remota (local com "remote", "home based", "worldwide"... ou, no Lever, o campo
@@ -20,6 +20,7 @@ from ..models import Job
 
 GREENHOUSE = "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
 LEVER = "https://api.lever.co/v0/postings/{slug}"
+ASHBY = "https://api.ashbyhq.com/posting-api/job-board/{slug}"
 BRAZIL = re.compile(r"brazil|brasil", re.I)
 
 
@@ -30,6 +31,29 @@ def fetch(cfg: dict) -> list[Job]:
         jobs += _greenhouse(slug)
     for slug in cc.get("lever", []):
         jobs += _lever(slug)
+    for slug in cc.get("ashby", []):
+        r = http.get(ASHBY.format(slug=slug))
+        jobs += parse_ashby(slug, r.json().get("jobs", [])) if r is not None else []
+    return jobs
+
+
+def parse_ashby(slug: str, itens: list[dict]) -> list[Job]:
+    """Quadro Ashby (jobs.ashbyhq.com/<slug>). "Any Location" vira "Anywhere" para o filtro de região entender."""
+    jobs = []
+    for it in itens:
+        if it.get("isListed") is False or not (it.get("isRemote") or it.get("workplaceType") == "Remote"):
+            continue
+        place = it.get("location") or ""
+        place = "Anywhere" if place.lower().startswith("any location") else place
+        jobs.append(Job(
+            source=f"empresa:{slug}",
+            title=it["title"],
+            url=it["jobUrl"],
+            company=slug.replace("-", " ").title(),
+            location=place,
+            tags=[t for t in (it.get("team"), it.get("employmentType")) if t][:2],
+            international=not BRAZIL.search(place),
+        ))
     return jobs
 
 

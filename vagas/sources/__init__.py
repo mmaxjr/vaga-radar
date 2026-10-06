@@ -1,5 +1,5 @@
-from . import (companies, coodesh, empregare, geekhunter, github, gupy, himalayas, infojobs, jobicy, linkedin, local, nerdin, programathor,
-               remoteok, remotive, trampos, vagascombr, weworkremotely, zohorecruit)
+from . import (companies, coodesh, empregare, geekhunter, github, gupy, himalayas, hn, infojobs, jobicy, linkedin, local, nerdin, programathor,
+               remoteok, remotive, torre, trampos, vagascombr, weworkremotely, zohorecruit)
 
 # nome -> função fetch(cfg) -> list[Job]
 SOURCES = {
@@ -16,6 +16,8 @@ SOURCES = {
     "nerdin": nerdin.fetch,
     "coodesh": coodesh.fetch,
     "trampos": trampos.fetch,
+    "torre": torre.fetch,
+    "hn": hn.fetch,
     "github": github.fetch,
     "programathor": programathor.fetch,
     "vagascombr": vagascombr.fetch,

@@ -96,6 +96,15 @@ days = 14
 # O "slug" é a parte final do endereço: boards.greenhouse.io/<slug>  ou  jobs.lever.co/<slug>
 greenhouse = ["canonical", "datadog", "elastic", "gitlab", "twilio", "remotecom", "coinbase", "stone", "clara", "vtex", "quintoandar"]
 lever = []
+# Ashby: jobs.ashbyhq.com/<slug>. Poucas empresas listam vaga aberta ao Brasil; só entram as remotas
+ashby = ["zapier", "oyster"]
+
+[torre]
+# comunidades públicas de vagas remotas (torre.ai/sub/<nome>/jobs); a página só mostra as ~20 mais ativas
+communities = ["remote-latam-information-technology"]
+
+[hn]
+# tópico mensal "Ask HN: Who is hiring?" (sai no dia 1); não tem opções
 
 [zohorecruit]
 # Páginas de carreira <nome>.zohorecruit.com (Zoho Recruit). Só vagas marcadas "Trabalho remoto" (e as da sua cidade, se [local] ligado)

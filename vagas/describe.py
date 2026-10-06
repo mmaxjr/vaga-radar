@@ -79,6 +79,11 @@ def _jsonld(job: Job) -> Resultado | None:
     return _texto(html.unescape(vaga["description"])), (vaga.get("validThrough") or "")[:10]
 
 
+def _hn(job: Job) -> Resultado | None:
+    r = http.get(f"https://hn.algolia.com/api/v1/items/{job.url.rsplit('=', 1)[-1]}")
+    return (_texto(html.unescape(r.json().get("text") or "")), "") if r is not None else None
+
+
 def _empresa(job: Job) -> Resultado | None:
     slug, vaga = job.source.split(":", 1)[1], job.url.rstrip("/").split("/")[-1]
     r = http.get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{vaga}")  # Lever não tem esta rota: None
@@ -87,7 +92,7 @@ def _empresa(job: Job) -> Resultado | None:
 
 FETCHERS: dict[str, Callable[[Job], Resultado | None]] = {
     "gupy": _gupy, "himalayas": _himalayas, "linkedin": _linkedin, "github": _github,
-    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld, "coodesh": _pagina,
+    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld, "coodesh": _pagina, "hn": _hn, "torre": _pagina,
 }
 
 
