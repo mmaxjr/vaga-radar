@@ -30,6 +30,7 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 | [Coodesh](https://coodesh.com) | Brasil | sitemap oficial de vagas, uma página por vaga; só localidade "Remota" (as vagas costumam ser antigas e caem no filtro de idade) |
 | [Torre](https://torre.ai) | América Latina | página pública da comunidade de vagas remotas de TI (`/sub/<nome>/jobs`, ~20 mais ativas); a API e a busca por parâmetros o robots.txt proíbe, então ficam de fora |
 | [Hacker News "Who is hiring?"](https://news.ycombinator.com/submitted?id=whoishiring) | Global | API pública do Algolia, tópico mensal; só anúncios remotos abertos a Brasil/LATAM/mundo (pelo cabeçalho) |
+| [Sólides Vagas](https://vagas.solides.com.br) | Brasil | o endpoint do próprio portal (`/api/vacancies`, `jobsType=remoto`, 14 por pedido; o robots.txt libera); só vagas remotas abertas a todos, no prazo e com página pública; a descrição vem da própria lista |
 | Programathor | Brasil | HTML da listagem (ignora vagas "Vencida") |
 | Vagas.com.br | Brasil | HTML da busca |
 | GitHub: frontendbr, backend-br, androiddevbr, react-brasil, datascience-br, qa-brasil | Brasil | cada issue aberta é uma vaga |

@@ -1,6 +1,6 @@
 """Texto da descrição de cada vaga, por fonte, com cache em disco e orçamento de requisições.
 
-Jobicy, Vagas.com.br e Nerdin: lidos pelo JSON-LD `JobPosting` da página. Fontes sem leitura: GeekHunter (robots.txt proíbe
+Jobicy, Vagas.com.br, Nerdin e Sólides: lidos pelo JSON-LD `JobPosting` da página. Fontes sem leitura: GeekHunter (robots.txt proíbe
 /jobs/...), Zoho (a API não busca por vaga), RemoteOK, Remotive e We Work Remotely (já vêm em inglês e curtas).
 Nelas a vaga entra no ranking só pelo título.
 """
@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 
 from . import http, jsonld
 from .models import Job
-from .sources import gupy, himalayas, linkedin
+from .sources import gupy, himalayas, linkedin, solides
 
 log = logging.getLogger(__name__)
 Resultado = tuple[str, str]  # (texto, prazo AAAA-MM-DD ou "")
@@ -84,6 +84,17 @@ def _hn(job: Job) -> Resultado | None:
     return (_texto(html.unescape(r.json().get("text") or "")), "") if r is not None else None
 
 
+def _solides(job: Job) -> Resultado | None:
+    """A lista da API do Sólides já traz a descrição completa: acha a vaga pelo título e confere o código."""
+    r = http.get(solides.API, params={"page": 1, "take": 14, "jobsType": "remoto", "title": job.title, "locations": ""})
+    if r is None:
+        return None
+    for it in r.json().get("data", []):
+        if str(it["id"]) == job.url.rsplit("/", 1)[-1]:
+            return _texto(it.get("description", "")), (it.get("date") or {}).get("due") or ""
+    return None
+
+
 def _empresa(job: Job) -> Resultado | None:
     slug, vaga = job.source.split(":", 1)[1], job.url.rstrip("/").split("/")[-1]
     r = http.get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{vaga}")  # Lever não tem esta rota: None
@@ -92,7 +103,7 @@ def _empresa(job: Job) -> Resultado | None:
 
 FETCHERS: dict[str, Callable[[Job], Resultado | None]] = {
     "gupy": _gupy, "himalayas": _himalayas, "linkedin": _linkedin, "github": _github,
-    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld, "coodesh": _pagina, "hn": _hn, "torre": _pagina,
+    "infojobs": _pagina, "empregare": _pagina, "empresa": _empresa, "jobicy": _jsonld, "vagas.com.br": _jsonld, "nerdin": _jsonld, "coodesh": _pagina, "solides": _solides, "hn": _hn, "torre": _pagina,
 }
 
 

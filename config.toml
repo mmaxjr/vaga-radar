@@ -124,6 +124,11 @@ delay = 1.5
 [nerdin]
 pages = 5          # ~20 vagas por página, das mais novas para as mais antigas
 
+[solides]
+# Sólides Vagas (vagas remotas pelo próprio endpoint do site; 14 por pedido, uma página por termo)
+pages = 1
+# terms = ["analista de redes", "python"]   # lista própria, mais curta que [search] terms
+
 [trampos]
 pages = 5          # 12 vagas por página; o site é mais de comunicação, poucas de TI
 
